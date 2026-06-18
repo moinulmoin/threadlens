@@ -15,8 +15,7 @@ import { promisify } from "node:util";
 import { useEffect, useState } from "react";
 
 const execFileAsync = promisify(execFile);
-const TITLE_COLUMN_CHARS = 54;
-const PATH_COLUMN_CHARS = 36;
+const TITLE_COLUMN_CHARS = 84;
 
 type Preferences = {
   threadlensCommand: string;
@@ -109,10 +108,6 @@ export default function Command() {
             tooltip: displayTitle(result),
           }}
           accessories={[
-            {
-              text: accessoryPath(result.cwd),
-              tooltip: result.cwd || "Directory",
-            },
             {
               text: sourceLabel(result.source),
               icon: sourceIcon(result.source),
@@ -330,10 +325,6 @@ function compactPath(value: string): string {
   return normalized;
 }
 
-function accessoryPath(value: string): string {
-  return truncateMiddle(compactPath(value), PATH_COLUMN_CHARS);
-}
-
 function listTitle(result: ThreadlensResult): string {
   return truncateMiddle(displayTitle(result), TITLE_COLUMN_CHARS);
 }
@@ -366,7 +357,7 @@ function sourceIcon(source: string) {
     cursor: "agents/cursor.svg",
     pi: "agents/pi.svg",
     amp: "agents/amp.svg",
-    omp: "agents/omp.png",
+    omp: "agents/omp.svg",
     droid: "agents/droid.svg",
     opencode: {
       light: "agents/opencode.svg",
