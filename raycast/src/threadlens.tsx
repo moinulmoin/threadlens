@@ -2,7 +2,6 @@ import {
   Action,
   ActionPanel,
   Clipboard,
-  Color,
   Detail,
   Icon,
   List,
@@ -103,14 +102,17 @@ export default function Command() {
       {results.map((result) => (
         <List.Item
           key={result.result_id}
-          title={displayTitle(result)}
+          title={{
+            value: listTitle(result),
+            tooltip: displayTitle(result),
+          }}
           accessories={[
             {
               text: accessoryPath(result.cwd),
               tooltip: result.cwd || "Directory",
             },
             {
-              text: sourceAccessoryText(result.source),
+              text: sourceLabel(result.source),
               icon: sourceIcon(result.source),
               tooltip: "Agent",
             },
@@ -327,7 +329,11 @@ function compactPath(value: string): string {
 }
 
 function accessoryPath(value: string): string {
-  return truncateMiddle(compactPath(value), 46);
+  return truncateMiddle(compactPath(value), 32);
+}
+
+function listTitle(result: ThreadlensResult): string {
+  return truncateMiddle(displayTitle(result), 52);
 }
 
 function lastPathPart(value: string): string {
@@ -350,50 +356,17 @@ function sourceLabel(source: string): string {
   return labels[source] || source;
 }
 
-function sourceAccessoryText(source: string): { value: string; color: Color } {
-  return {
-    value: sourceLabel(source),
-    color: sourceLabelColor(source),
-  };
-}
-
-function sourceLabelColor(source: string): Color {
-  const colors: Record<string, Color> = {
-    codex: Color.Green,
-    claude: Color.Orange,
-    cursor: Color.Blue,
-    pi: Color.Purple,
-    omp: Color.Red,
-    droid: Color.Green,
-    opencode: Color.PrimaryText,
-  };
-  return colors[source] || Color.SecondaryText;
-}
-
 function sourceIcon(source: string) {
-  const icons: Record<
-    string,
-    {
-      source: string | { light: string; dark: string };
-      tintColor?: Color.ColorLike;
-    }
-  > = {
-    codex: {
-      source: "agents/codex.svg",
-      tintColor: "#10A37F",
-    },
-    claude: { source: "agents/claude.svg" },
-    cursor: {
-      source: "agents/cursor.svg",
-    },
-    pi: { source: "agents/pi.svg" },
-    omp: { source: "agents/amp.svg" },
-    droid: { source: "agents/droid.svg" },
+  const icons: Record<string, string | { light: string; dark: string }> = {
+    codex: "agents/codex.svg",
+    claude: "agents/claude.svg",
+    cursor: "agents/cursor.svg",
+    pi: "agents/pi.svg",
+    omp: "agents/amp.svg",
+    droid: "agents/droid.svg",
     opencode: {
-      source: {
-        light: "agents/opencode.svg",
-        dark: "agents/opencode-dark.svg",
-      },
+      light: "agents/opencode.svg",
+      dark: "agents/opencode-dark.svg",
     },
   };
   const icon = icons[source];
@@ -403,7 +376,7 @@ function sourceIcon(source: string) {
   }
 
   return {
-    ...icon,
+    source: icon,
     fallback: Icon.Terminal,
   };
 }
