@@ -312,12 +312,11 @@ function compactPath(value: string): string {
     : value;
   const parts = normalized.split("/").filter(Boolean);
 
-  if (normalized.startsWith("~") && parts.length > 4) {
-    return `~/${parts.slice(-3).join("/")}`;
-  }
-
-  if (!normalized.startsWith("~") && parts.length > 5) {
-    return `.../${parts.slice(-4).join("/")}`;
+  if (parts.length > 4) {
+    const prefix = normalized.startsWith("/") ? "/" : "";
+    const head = parts.slice(0, 2).join("/");
+    const tail = parts.slice(-2).join("/");
+    return `${prefix}${head}/.../${tail}`;
   }
 
   return normalized;
@@ -344,13 +343,23 @@ function sourceLabel(source: string): string {
 }
 
 function sourceIcon(source: string) {
-  const icons: Record<string, string> = {
-    codex: "agents/codex.svg",
+  const icons: Record<string, string | { light: string; dark: string }> = {
+    codex: {
+      light: "agents/codex.svg",
+      dark: "agents/codex-dark.svg",
+    },
     claude: "agents/claude.svg",
+    cursor: {
+      light: "agents/cursor.svg",
+      dark: "agents/cursor-dark.svg",
+    },
     pi: "agents/pi.svg",
     omp: "agents/amp.svg",
     droid: "agents/droid.svg",
-    opencode: "agents/opencode.svg",
+    opencode: {
+      light: "agents/opencode.svg",
+      dark: "agents/opencode-dark.svg",
+    },
   };
 
   return {
