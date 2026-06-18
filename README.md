@@ -1,12 +1,27 @@
 # Threadlens
 
-Threadlens is a simple local search system for coding-agent sessions. The first
-version refreshes local agent session stores into a SQLite FTS cache so you can
-answer questions like:
+Threadlens is a local-first search tool for coding-agent sessions. It refreshes
+local agent session stores into a private SQLite FTS cache so you can answer
+questions like:
 
 > Where did I debug the Plunk OTP issue?
 
-It is designed as a local-first prototype. It does not upload transcripts.
+It does not upload transcripts. Raw agent session stores remain the source of
+truth; the Threadlens index is disposable and rebuildable.
+
+## Status
+
+V0.1 is focused on reliable local keyword, prefix, and typo-tolerant search.
+There are no embeddings, hosted sync, background daemon, or team features.
+
+## Project Docs
+
+- [Architecture](ARCHITECTURE.md): source adapters, SQLite cache, ranking, and
+  Raycast boundary.
+- [Contributing](CONTRIBUTING.md): local development, tests, and adapter rules.
+- [Security](SECURITY.md): local data boundary and transcript safety.
+- [Evaluation](eval/README.md): public smoke tests and private acceptance evals.
+- [Launch](launch/README.md): launch copy, checklist, and positioning.
 
 ## Install
 
@@ -28,6 +43,12 @@ tool after changes:
 
 ```bash
 uv tool install --reinstall .
+```
+
+Verify the checkout:
+
+```bash
+make verify
 ```
 
 ## Initial Scope
@@ -195,7 +216,8 @@ The committed custom-source fixture can be used for a public development smoke
 eval without private transcripts:
 
 ```bash
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json sources add demoagent \
+mkdir -p /private/tmp/threadlens-smoke
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json sources add demoagent \
   --path eval/custom-source.example.jsonl \
   --session-key session.id \
   --message-key message.id \
@@ -204,8 +226,8 @@ threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.js
   --timestamp-key createdAt \
   --cwd-key cwd \
   --title-key title
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json refresh --source demoagent --force
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json eval eval/custom-source.eval.json
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json refresh --source demoagent --force
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json eval eval/custom-source.eval.json
 ```
 
 ## Notes
@@ -243,10 +265,10 @@ With the CLI installed, configure extension preferences as:
 - Threadlens Args: empty
 - Working Directory: empty
 
-Verified locally:
+Run in development mode:
 
 ```bash
-cd /Users/moinulmoin/Documents/help-shadcn/raycast
+cd raycast
 npm install
 npm run dev
 ```
@@ -257,8 +279,10 @@ To install it from source instead of only running the dev process, use Raycast's
 `Import Extension` command and select:
 
 ```text
-/Users/moinulmoin/Documents/help-shadcn/raycast
+<repo>/raycast
 ```
+
+If Raycast asks which command to import, choose `threadlens`.
 
 From the repo root, the same TypeScript check is:
 
@@ -266,3 +290,7 @@ From the repo root, the same TypeScript check is:
 npm --prefix raycast exec -- tsc --project raycast/tsconfig.json --noEmit
 NPM_CONFIG_CACHE=/private/tmp/threadlens-npm-cache npm --prefix raycast run lint
 ```
+
+If Raycast shows `Missing executable`, remove the old imported extension from
+Raycast, quit and reopen Raycast, then run `npm run dev` again from `raycast/`.
+That error usually means Raycast is loading a stale imported command bundle.

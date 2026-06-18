@@ -13,7 +13,7 @@ With the CLI installed, set preferences to:
 For active development, run the Raycast extension in development mode:
 
 ```bash
-cd /Users/moinulmoin/Documents/help-shadcn/raycast
+cd raycast
 npm install
 npm run dev
 ```
@@ -24,11 +24,15 @@ If you want the extension to stay available in Raycast outside the dev process,
 open Raycast's `Import Extension` command and select:
 
 ```text
-/Users/moinulmoin/Documents/help-shadcn/raycast
+<repo>/raycast
 ```
 
 After importing, search for `Search Agent Sessions` in Raycast's root search.
 If Raycast asks which command to import, choose `threadlens`.
+
+If Raycast shows `Missing executable`, remove the old imported Threadlens
+extension in Raycast, quit and reopen Raycast, then run `npm run dev` again from
+this directory.
 
 ## Checks
 

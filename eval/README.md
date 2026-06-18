@@ -67,7 +67,8 @@ on the current local corpus.
 For CI and public smoke testing, use the committed custom source fixture:
 
 ```bash
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json sources add demoagent \
+mkdir -p /private/tmp/threadlens-smoke
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json sources add demoagent \
   --path eval/custom-source.example.jsonl \
   --session-key session.id \
   --message-key message.id \
@@ -76,6 +77,6 @@ threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.js
   --timestamp-key createdAt \
   --cwd-key cwd \
   --title-key title
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json refresh --source demoagent --force
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json eval eval/custom-source.eval.json
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json refresh --source demoagent --force
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json eval eval/custom-source.eval.json
 ```

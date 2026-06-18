@@ -30,7 +30,8 @@ threadlens --db .threadlens/index.sqlite bench .threadlens/eval-local-10.json --
 Run the public smoke fixture:
 
 ```bash
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json sources add demoagent \
+mkdir -p /private/tmp/threadlens-smoke
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json sources add demoagent \
   --path eval/custom-source.example.jsonl \
   --session-key session.id \
   --message-key message.id \
@@ -41,8 +42,8 @@ threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.js
   --title-key title \
   --resume-template "cd {cwd} && demoagent resume {session_id}"
 
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json refresh --source demoagent --force
-threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.json eval eval/custom-source.eval.json
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json refresh --source demoagent --force
+threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json eval eval/custom-source.eval.json
 ```
 
 Run Raycast checks:
@@ -60,10 +61,10 @@ npm --prefix raycast run build
 Last verified in this workspace:
 
 - Python compile: passed.
-- Unit tests: 38 passed.
+- Unit tests: 39 passed.
 - `doctor --json`: passed.
-- Installed CLI index: ready with 109,986 messages.
-- Expanded source counts: Codex 26,773, Claude 2,116, Cursor 5, Pi 468, OMP
+- Installed CLI index: ready with 110,205 messages.
+- Expanded source counts: Codex 26,992, Claude 2,116, Cursor 5, Pi 468, OMP
   53,660, Droid 26,960, OpenCode 4.
 - OpenCode source: indexed 4 messages from 1 local session.
 - New-source refresh: Pi, OMP, and Droid refreshed into the real user-level
@@ -72,7 +73,7 @@ Last verified in this workspace:
   copyable resume commands.
 - OpenCode source-restricted search returned the new local OpenCode session with
   a copyable `opencode --session` command.
-- Installed-index bench: p95 67.3ms, below the 250ms gate.
+- Private eval bench: p95 136.5ms, below the 250ms gate.
 - `doctor --json` reports the index as ready and reports freshness separately;
   active Codex sessions can still show stale-file hints while the index remains
   usable.
@@ -84,6 +85,7 @@ Last verified in this workspace:
 - Raycast lint: passed.
 - Raycast audit: 0 vulnerabilities.
 - Raycast build: passed.
+- Project-scoped search: `--cwd` verified against the Threadlens repo.
 
 Do not publish private corpus counts or private query names unless reviewed.
 
