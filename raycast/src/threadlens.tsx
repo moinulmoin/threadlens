@@ -1,7 +1,10 @@
 import {
   Action,
   ActionPanel,
+  Color,
   Clipboard,
+  Detail,
+  Icon,
   List,
   showToast,
   Toast,
@@ -93,7 +96,6 @@ export default function Command() {
   return (
     <List
       isLoading={isLoading}
-      isShowingDetail
       onSearchTextChange={setQuery}
       searchBarPlaceholder="Search local coding-agent sessions..."
       throttle
@@ -101,29 +103,26 @@ export default function Command() {
       {results.map((result) => (
         <List.Item
           key={result.result_id}
-          title={result.title || result.session_id}
-          subtitle={result.cwd || result.source}
+          icon={sourceIcon(result.source)}
+          title={displayTitle(result)}
+          subtitle={compactPath(result.cwd)}
           accessories={[
-            { text: result.source },
             {
-              text: result.last_timestamp
-                ? result.last_timestamp.slice(0, 10)
-                : "",
+              text: sourceLabel(result.source),
+              icon: sourceIcon(result.source),
+              tooltip: "Agent",
             },
-            { text: String(Math.round(result.score)) },
+            {
+              text: formatDate(result.last_timestamp),
+              icon: Icon.Calendar,
+              tooltip: result.last_timestamp || "No timestamp",
+            },
+            {
+              text: String(Math.round(result.score)),
+              icon: Icon.BullsEye,
+              tooltip: "Score",
+            },
           ]}
-          detail={
-            <List.Item.Detail
-              markdown={result.best_snippets
-                .map(
-                  (snippet) =>
-                    `**${escapeMarkdown(snippet.role)}** ${escapeMarkdown(snippet.timestamp)}\n\n${escapeMarkdown(
-                      snippet.snippet,
-                    )}`,
-                )
-                .join("\n\n---\n\n")}
-            />
-          }
           actions={<ThreadlensActions result={result} />}
         />
       ))}
@@ -131,30 +130,248 @@ export default function Command() {
   );
 }
 
-function ThreadlensActions({ result }: { result: ThreadlensResult }) {
+function ThreadlensActions({
+  result,
+  includeDetails = true,
+}: {
+  result: ThreadlensResult;
+  includeDetails?: boolean;
+}) {
   return (
     <ActionPanel>
+      {includeDetails ? (
+        <Action.Push
+          title="Open Details"
+          icon={Icon.Eye}
+          target={<SessionDetail result={result} />}
+        />
+      ) : null}
       {result.actions?.resume_command ? (
         <Action.CopyToClipboard
           title="Copy Resume Command"
+          icon={Icon.Terminal}
           content={result.actions.resume_command}
         />
       ) : null}
       <Action
         title="Copy Session Brief"
+        icon={Icon.Clipboard}
         onAction={() => copyBrief(result.result_id)}
       />
       <Action.CopyToClipboard
         title="Copy Result ID"
+        icon={Icon.Text}
         content={result.result_id}
       />
       <Action.CopyToClipboard
         title="Copy Source Path"
+        icon={Icon.Folder}
         content={result.actions?.open_source || result.source_path}
       />
-      <Action.Open title="Open Source File" target={result.source_path} />
+      <Action.Open
+        title="Open Source File"
+        icon={Icon.Document}
+        target={result.source_path}
+      />
     </ActionPanel>
   );
+}
+
+function SessionDetail({ result }: { result: ThreadlensResult }) {
+  return (
+    <Detail
+      markdown={detailMarkdown(result)}
+      metadata={
+        <Detail.Metadata>
+          <Detail.Metadata.Label
+            title="Title"
+            text={displayTitle(result)}
+            icon={Icon.Text}
+          />
+          <Detail.Metadata.Label
+            title="Directory"
+            text={result.cwd || "-"}
+            icon={Icon.Folder}
+          />
+          <Detail.Metadata.Label
+            title="Agent"
+            text={sourceLabel(result.source)}
+            icon={sourceIcon(result.source)}
+          />
+          <Detail.Metadata.Label
+            title="Last Activity"
+            text={formatDateTime(result.last_timestamp)}
+            icon={Icon.Calendar}
+          />
+          <Detail.Metadata.Label
+            title="Score"
+            text={String(Math.round(result.score))}
+            icon={Icon.BullsEye}
+          />
+          <Detail.Metadata.Separator />
+          <Detail.Metadata.Label title="Result ID" text={result.result_id} />
+          <Detail.Metadata.Label title="Session ID" text={result.session_id} />
+          <Detail.Metadata.Label
+            title="Source"
+            text={
+              result.actions?.open_source ||
+              `${result.source_path}:${result.source_line}`
+            }
+            icon={Icon.Document}
+          />
+        </Detail.Metadata>
+      }
+      actions={<ThreadlensActions result={result} includeDetails={false} />}
+    />
+  );
+}
+
+function detailMarkdown(result: ThreadlensResult): string {
+  const snippets = result.best_snippets.length
+    ? result.best_snippets
+        .map(
+          (snippet) =>
+            `### ${escapeMarkdown(roleLabel(snippet.role))} - ${escapeMarkdown(formatDateTime(snippet.timestamp))}\n\n${escapeMarkdown(
+              snippet.snippet,
+            )}`,
+        )
+        .join("\n\n---\n\n")
+    : "_No snippets returned._";
+
+  const terms = result.matched_terms.length
+    ? result.matched_terms
+        .map((term) => `\`${escapeMarkdown(term)}\``)
+        .join(", ")
+    : "-";
+
+  return `# ${escapeMarkdown(displayTitle(result))}
+
+${escapeMarkdown(compactPath(result.cwd))}
+
+**Agent:** ${escapeMarkdown(sourceLabel(result.source))}  
+**Last activity:** ${escapeMarkdown(formatDateTime(result.last_timestamp))}  
+**Matched terms:** ${terms}
+
+---
+
+${snippets}`;
+}
+
+function displayTitle(result: ThreadlensResult): string {
+  const title = (result.title || "").trim();
+  if (title && title !== result.session_id) {
+    return title;
+  }
+
+  const directory = lastPathPart(result.cwd);
+  if (directory) {
+    return directory;
+  }
+
+  return result.session_id;
+}
+
+function compactPath(value: string): string {
+  if (!value) {
+    return "-";
+  }
+
+  const home = homedir();
+  const normalized = value.startsWith(home)
+    ? `~${value.slice(home.length)}`
+    : value;
+  const parts = normalized.split("/").filter(Boolean);
+
+  if (normalized.startsWith("~") && parts.length > 4) {
+    return `~/${parts.slice(-3).join("/")}`;
+  }
+
+  if (!normalized.startsWith("~") && parts.length > 5) {
+    return `.../${parts.slice(-4).join("/")}`;
+  }
+
+  return normalized;
+}
+
+function lastPathPart(value: string): string {
+  if (!value) {
+    return "";
+  }
+  return value.split("/").filter(Boolean).at(-1) || "";
+}
+
+function sourceLabel(source: string): string {
+  const labels: Record<string, string> = {
+    codex: "Codex",
+    claude: "Claude",
+    cursor: "Cursor",
+    pi: "Pi",
+    omp: "OMP",
+    droid: "Droid",
+    opencode: "OpenCode",
+  };
+  return labels[source] || source;
+}
+
+function sourceIcon(source: string) {
+  const colors: Record<string, Color> = {
+    codex: Color.Green,
+    claude: Color.Orange,
+    cursor: Color.Purple,
+    pi: Color.Blue,
+    omp: Color.Magenta,
+    droid: Color.Yellow,
+    opencode: Color.Red,
+  };
+
+  return {
+    source: Icon.Terminal,
+    tintColor: colors[source] || Color.SecondaryText,
+  };
+}
+
+function formatDate(value: string): string {
+  const date = parseDate(value);
+  if (!date) {
+    return "-";
+  }
+
+  const currentYear = new Date().getFullYear();
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+    ...(date.getFullYear() === currentYear ? {} : { year: "numeric" }),
+  }).format(date);
+}
+
+function formatDateTime(value: string): string {
+  const date = parseDate(value);
+  if (!date) {
+    return "-";
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+function parseDate(value: string): Date | null {
+  if (!value) {
+    return null;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function roleLabel(role: string): string {
+  if (!role) {
+    return "Message";
+  }
+  return role.charAt(0).toUpperCase() + role.slice(1);
 }
 
 async function searchThreadlens(

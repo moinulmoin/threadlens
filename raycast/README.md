@@ -60,3 +60,6 @@ threadlens brief "<result_id>" --json
 ```
 
 It does not index, parse, or rank sessions itself.
+
+The result list is optimized for scanning: title, cwd, agent, date, and score.
+Press Enter on a result to open snippets, metadata, and copy/open actions.
