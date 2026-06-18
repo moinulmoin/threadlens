@@ -218,7 +218,7 @@ threadlens --db /tmp/threadlens-smoke.sqlite --config /tmp/threadlens-sources.js
 - Pi, OMP, Droid, and OpenCode adapters index user/assistant text parts and skip thinking/tool blocks.
 - Obvious credential fields are skipped in generic and Cursor extraction.
 - Search results are grouped by session and include source, timestamp, cwd, source path, line, snippets, and score.
-- Use `--cwd` or `--project` to restrict search to sessions whose recorded cwd is that directory or a child directory.
+- Use `--cwd` to restrict search to sessions whose recorded cwd is that directory or a child directory.
 - For harnesses with verified local resume syntax, results include a copyable resume command.
 - Custom source resume templates support `{cwd}`, `{session_id}`, and `{source}` with shell-quoted values.
 

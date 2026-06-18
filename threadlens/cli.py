@@ -75,7 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     search_parser = sub.add_parser("search", help="Search indexed sessions")
     search_parser.add_argument("query", nargs="+")
     search_parser.add_argument("--source", help="Restrict to one source")
-    search_parser.add_argument("--cwd", "--project", dest="cwd", help="Restrict to sessions from this cwd/project directory")
+    search_parser.add_argument("--cwd", help="Restrict to sessions from this cwd directory")
     search_parser.add_argument("--limit", type=int, default=10)
     search_parser.add_argument("--json", action="store_true", help="Emit JSON lines")
     search_parser.add_argument("--no-bootstrap", action="store_true", help="Do not auto-index when the search index is empty")
