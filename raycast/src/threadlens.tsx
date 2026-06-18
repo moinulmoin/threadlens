@@ -466,7 +466,7 @@ async function runThreadlens(args: string[], signal?: AbortSignal) {
   } catch (error) {
     if (isExecutableMissing(error)) {
       throw new Error(
-        `Could not find ${command}. Install the CLI with "uv tool install --reinstall ." or set Threadlens Command to the full path.`,
+        `Could not find ${command}. Install the Threadlens CLI with "uv tool install threadlens" (or "npm i -g threadlens"), or set Threadlens Command to the full path.`,
       );
     }
     throw error;

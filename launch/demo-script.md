@@ -11,7 +11,7 @@ Target length: 60-90 seconds.
 
 ## Setup
 
-Use a local demo-safe corpus. Do not show private transcript content unless it
+Use a local demo-safe corpus. Do not show private session content unless it
 has been reviewed.
 
 Recommended demo sources:
@@ -110,7 +110,7 @@ Recommended demo sources:
 
 ## Demo Safety Notes
 
-- Do not show raw private transcript excerpts without review.
+- Do not show raw private session excerpts without review.
 - Prefer `--json` only when recording a scripted UI, because JSON can expose
   source paths and snippets.
 - Blur usernames, home paths, API names, and customer/project names if needed.

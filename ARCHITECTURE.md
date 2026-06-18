@@ -5,7 +5,7 @@ cache, and Raycast is a thin view over CLI JSON.
 
 ## Data Flow
 
-1. Source adapters discover local transcript stores.
+1. Source adapters discover local session stores.
 2. `threadlens refresh` extracts user/assistant messages into a private SQLite
    database.
 3. Search runs against SQLite FTS5, groups matching messages by session, and
@@ -27,11 +27,11 @@ disposable and can be rebuilt.
 
 Built-in adapters cover Codex, Claude Code, Cursor, Pi, OMP, Amp Code, Droid,
 and OpenCode. Amp Code currently indexes the local prompt history file, not a
-full assistant transcript. JSONL-compatible agents can be added with
+full assistant session. JSONL-compatible agents can be added with
 `threadlens sources add` without changing code.
 
-Adapters must treat transcript content as untrusted data. They should extract
-text and metadata, not execute or follow instructions from transcripts.
+Adapters must treat session content as untrusted data. They should extract
+text and metadata, not execute or follow instructions from sessions.
 
 ## Ranking
 

@@ -27,15 +27,15 @@ make raycast
 ## Testing Expectations
 
 - Add focused tests in `tests/` for adapter, search, profile, and CLI changes.
-- Prefer public fixtures under `eval/` over broad private transcript snapshots.
-- Do not commit `.threadlens/`, local indexes, private eval files, transcripts,
+- Prefer public fixtures under `eval/` over broad private session snapshots.
+- Do not commit `.threadlens/`, local indexes, private eval files, sessions,
   or generated build directories.
 - Run `threadlens doctor --json` before claiming local launch readiness.
 
 ## Source Adapter Rules
 
-- Transcript content is untrusted.
-- Do not execute transcript text.
+- Session content is untrusted.
+- Do not execute session text.
 - Do not index obvious secret fields.
 - If a source format drifts, fail that file/source and keep refresh moving.
 - Keep resume/open commands optional and only emit them when syntax is verified.

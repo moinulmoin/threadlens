@@ -69,7 +69,7 @@ Repo: <repo-url>
 ## GitHub Release Notes
 
 Threadlens V0 is the first local-first release for searching coding-agent
-session transcripts.
+sessions.
 
 Included:
 
@@ -97,7 +97,7 @@ I built Threadlens, a local-first search tool for coding-agent sessions.
 
 The goal is narrow: find the session, not build a giant memory platform. V0
 indexes local Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and OpenCode
-transcripts, and lets you add custom JSONL agent sources with config instead of
+sessions, and lets you add custom JSONL agent sources with config instead of
 code.
 
 Search is backed by SQLite FTS with prefix and typo-tolerant fallbacks. Results
@@ -120,7 +120,7 @@ Threadlens
 ## Landing Page Subcopy
 
 Search local Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and custom
-agent sessions from one CLI or Raycast command. Your transcripts stay on your
+agent sessions from one CLI or Raycast command. Your sessions stay on your
 machine.
 
 ## CTA Labels

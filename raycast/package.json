@@ -57,6 +57,8 @@
   "scripts": {
     "dev": "ray develop",
     "build": "ray build",
-    "lint": "ray lint"
+    "lint": "ray lint",
+    "fix-lint": "ray lint --fix",
+    "publish": "ray publish"
   }
 }

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import glob
 import json
+import os
 import sqlite3
 import urllib.parse
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from pathlib import Path
 from typing import Any
 
@@ -28,8 +29,55 @@ DEFAULT_SOURCE_NAMES = ("codex", "claude", "cursor", "pi", "omp", "amp", "droid"
 SOURCE_NAMES = ("codex", "claude", "cursor", "pi", "omp", "amp", "droid", "opencode")
 
 
-def source_paths(source: str, home: Path | None = None) -> list[Path]:
+def _dedup_paths(paths: list[Path]) -> list[Path]:
+    """Drop duplicate paths while preserving order."""
+    seen: set[Path] = set()
+    out: list[Path] = []
+    for p in paths:
+        if p not in seen:
+            seen.add(p)
+            out.append(p)
+    return out
+
+
+def _xdg_config_home(home: Path, env: Mapping[str, str]) -> Path:
+    root = env.get("XDG_CONFIG_HOME")
+    return Path(root) if root else home / ".config"
+
+
+def _xdg_data_home(home: Path, env: Mapping[str, str]) -> Path:
+    root = env.get("XDG_DATA_HOME")
+    return Path(root) if root else home / ".local" / "share"
+
+
+def _appdata_roots(home: Path, env: Mapping[str, str]) -> list[Path]:
+    """Windows AppData roots (Roaming, Local), honoring env vars when present.
+
+    The exact Windows store paths for some agents are unverified — see the
+    cross-platform note in README and the tracking GitHub issue.
+    """
+    roaming = env.get("APPDATA")
+    local = env.get("LOCALAPPDATA")
+    # Env-provided roots are *additional* candidates, never replacements: some
+    # agents ignore APPDATA/LOCALAPPDATA and still write to the conventional
+    # AppData/Roaming and AppData/Local locations, so always include both.
+    roots: list[Path] = []
+    if roaming:
+        roots.append(Path(roaming))
+    roots.append(home / "AppData" / "Roaming")
+    if local:
+        roots.append(Path(local))
+    roots.append(home / "AppData" / "Local")
+    return _dedup_paths(roots)
+
+
+def source_paths(
+    source: str,
+    home: Path | None = None,
+    environ: Mapping[str, str] | None = None,
+) -> list[Path]:
     home = home or Path.home()
+    env = environ if environ is not None else os.environ
     if source == "codex":
         return sorted((home / ".codex" / "sessions").glob("**/*.jsonl"))
     if source == "claude":
@@ -39,31 +87,56 @@ def source_paths(source: str, home: Path | None = None) -> list[Path]:
             paths.append(history)
         return paths
     if source == "cursor":
-        root = home / "Library" / "Application Support" / "Cursor" / "User"
+        # Cursor (a VS Code fork) stores its User dir per OS. XDG/AppData paths are
+        # *additional* candidates, never replacements — some apps ignore the env vars
+        # and still write to the conventional location, so always include it too.
+        user_dirs = _dedup_paths([
+            home / "Library" / "Application Support" / "Cursor" / "User",  # macOS
+            _xdg_config_home(home, env) / "Cursor" / "User",  # Linux ($XDG_CONFIG_HOME)
+            home / ".config" / "Cursor" / "User",  # Linux conventional fallback
+            *[r / "Cursor" / "User" for r in _appdata_roots(home, env)],  # Windows
+        ])
         paths: list[Path] = []
-        global_state = root / "globalStorage" / "state.vscdb"
-        if global_state.exists():
-            paths.append(global_state)
-        workspace = root / "workspaceStorage"
-        if workspace.exists():
-            paths.extend(sorted(workspace.glob("**/state.vscdb")))
+        for root in user_dirs:
+            if not root.exists():
+                continue
+            global_state = root / "globalStorage" / "state.vscdb"
+            if global_state.exists():
+                paths.append(global_state)
+            workspace = root / "workspaceStorage"
+            if workspace.exists():
+                paths.extend(sorted(workspace.glob("**/state.vscdb")))
         return paths
     if source == "pi":
         return sorted((home / ".pi" / "agent" / "sessions").glob("**/*.jsonl"))
     if source == "omp":
         return sorted((home / ".omp" / "agent" / "sessions").glob("**/*.jsonl"))
     if source == "amp":
-        history = home / ".local" / "share" / "amp" / "history.jsonl"
-        if history.exists():
-            return [history]
-        return []
+        amp_dirs = _dedup_paths([
+            _xdg_data_home(home, env) / "amp",  # $XDG_DATA_HOME
+            home / ".local" / "share" / "amp",  # conventional fallback
+            *[r / "amp" for r in _appdata_roots(home, env)],  # Windows (best-effort)
+        ])
+        histories: list[Path] = []
+        for amp_dir in amp_dirs:
+            history = amp_dir / "history.jsonl"
+            if history.exists():
+                histories.append(history)
+        return _dedup_paths(histories)
     if source == "droid":
         return sorted((home / ".factory" / "sessions").glob("**/*.jsonl"))
     if source == "opencode":
-        db = home / ".local" / "share" / "opencode" / "opencode.db"
-        if db.exists() and opencode_db_has_messages(db):
-            return [db]
-        return []
+        opencode_dirs = _dedup_paths([
+            _xdg_data_home(home, env) / "opencode",  # $XDG_DATA_HOME
+            home / ".local" / "share" / "opencode",  # conventional fallback
+            *[r / "opencode" for r in _appdata_roots(home, env)],  # Windows (best-effort)
+        ])
+        dbs: list[Path] = []
+        for oc_dir in opencode_dirs:
+            db = oc_dir / "opencode.db"
+            if db.exists() and opencode_db_has_messages(db):
+                dbs.append(db)
+        return _dedup_paths(dbs)
     raise ValueError(f"Unknown source: {source}")
 
 

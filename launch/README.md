@@ -23,7 +23,7 @@ JSONL agent sources, and exposes both CLI and Raycast workflows.
 Do not sell Threadlens as "AI memory" or "universal agent recall." Sell the
 thing that works:
 
-> Fast local search across coding-agent session transcripts, with reliable
+> Fast local search across coding-agent sessions, with reliable
 > grouping, snippets, and copyable actions.
 
 V0 is intentionally boring under the hood: SQLite FTS, prefix matching, bounded

@@ -1,7 +1,7 @@
 # Threadlens Evaluation
 
 The real acceptance test is a private local eval file with known session ids.
-Do not commit the private file; it contains local paths and transcript-derived
+Do not commit the private file; it contains local paths and session-derived
 queries.
 
 Each case should target one known session, or a small set of equivalent
@@ -48,7 +48,7 @@ system should be judged on whether it retrieves the right local coding-agent
 session from remembered content.
 
 Do not use a currently active Threadlens development session as an eval target
-after printing eval reports into that same session. Those transcripts can contain
+after printing eval reports into that same session. Those sessions can contain
 the positive and negative query labels verbatim, which makes the fixture
 self-referential instead of measuring retrieval quality.
 

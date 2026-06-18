@@ -26,9 +26,9 @@ find the agent session you half-remember.
 I built Threadlens because my useful work history was scattered across Codex,
 Claude Code, Cursor, and local agent harnesses.
 
-The first version is deliberately narrow. It reads local transcript stores,
+The first version is deliberately narrow. It reads local session stores,
 builds a disposable SQLite cache, and gives you fast session-level search from
-the CLI or Raycast. Raw sessions remain the source of truth, and transcript
+the CLI or Raycast. Raw sessions remain the source of truth, and session
 content is not uploaded.
 
 I chose keyword/prefix/typo-tolerant search before embeddings because the first

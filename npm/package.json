@@ -1,6 +1,6 @@
 {
   "name": "threadlens",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local cross-harness search for agent threads",
   "bin": {
     "threadlens": "bin/threadlens.js"

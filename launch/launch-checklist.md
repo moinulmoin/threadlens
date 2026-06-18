@@ -7,7 +7,7 @@
 - [ ] Cursor/OpenCode format-drift caveats are described clearly.
 - [ ] Public copy does not claim semantic search.
 - [ ] Public copy does not claim universal agent support.
-- [ ] Public copy does not expose private transcript snippets.
+- [ ] Public copy does not expose private session snippets.
 - [ ] Resume commands are described as optional copyable actions.
 - [ ] Bundled Codex skill is packaged and discoverable with `threadlens skill`.
 - [ ] `LICENSE` exists and package metadata points to it.
@@ -83,7 +83,7 @@ Last verified in this workspace:
   active Codex sessions can still show stale-file hints while the index remains
   usable.
 - Legacy private eval fixture: not launch-valid after current Threadlens
-  development transcripts included eval labels verbatim; rebuild it with clean
+  development sessions included eval labels verbatim; rebuild it with clean
   targets or multi-target equivalents before claiming Recall@5.
 - Public custom-source eval: 5/5 positives, 0/2 negatives.
 - Raycast TypeScript: passed.
@@ -124,7 +124,7 @@ Do not publish private corpus counts or private query names unless reviewed.
 
 ## Stop-Ship Conditions
 
-- Search crashes on malformed or changed transcript files.
+- Search crashes on malformed or changed session files.
 - Public smoke eval fails.
 - Private eval falls below Recall@5 90%.
 - Private bench exceeds p95 250ms after repeat run.

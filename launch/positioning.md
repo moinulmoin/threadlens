@@ -37,7 +37,7 @@ and find the session.
 
 Search local coding-agent sessions from one place.
 
-Threadlens turns local transcript stores into a fast searchable cache, grouped
+Threadlens turns local session stores into a fast searchable cache, grouped
 by source and session, with snippets and optional actions like copy resume
 command.
 
@@ -57,7 +57,7 @@ Threadlens V0 is:
 
 ## Strong Claims We Can Make
 
-- Local transcripts stay local.
+- Local sessions stay local.
 - Threadlens does not upload session content.
 - The cache is disposable and rebuildable from the raw agent session stores.
 - Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and OpenCode are built-in sources.
@@ -104,7 +104,7 @@ Practical:
 For launch:
 
 > Threadlens finds the coding-agent session you half-remember, without uploading
-> your transcripts.
+> your sessions.
 
 For shadcn reply:
 

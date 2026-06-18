@@ -31,7 +31,7 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, 0)
         self.assertEqual(stderr.getvalue(), "")
-        self.assertIn("threadlens 1.0.0", stdout.getvalue())
+        self.assertIn("threadlens 1.0.1", stdout.getvalue())
 
     def test_skill_command_prints_bundled_skill_path(self):
         code, stdout, stderr = self.run_cli(["skill"])

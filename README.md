@@ -7,7 +7,7 @@
 [![Python](https://img.shields.io/pypi/pyversions/threadlens?logo=python&logoColor=white)](https://pypi.org/project/threadlens/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-**Find the coding-agent session you half-remember — without uploading your transcripts.**
+**Find the coding-agent session you half-remember — without uploading your session history.**
 
 Threadlens is a local-first search tool for coding-agent sessions. It refreshes
 local agent session stores into a private SQLite FTS cache so you can answer
@@ -15,8 +15,8 @@ questions like:
 
 > Where did I debug the Plunk OTP issue?
 
-It does not upload transcripts. Raw agent session stores remain the source of
-truth; the Threadlens index is disposable and rebuildable.
+Your sessions never leave your machine. Raw agent session stores remain the
+source of truth; the Threadlens index is disposable and rebuildable.
 
 ## Quickstart
 
@@ -34,12 +34,25 @@ OpenCode** sessions — plus any custom JSONL agent you add with config, not cod
 v1.0 is focused on reliable local keyword, prefix, and typo-tolerant search.
 There are no embeddings, hosted sync, background daemon, or team features.
 
+## Platform support
+
+Threadlens runs anywhere Python 3.10+ runs — macOS, Linux, and Windows. What
+differs is *source discovery* (where it looks for each agent's local sessions):
+
+- **macOS** — fully supported and tested.
+- **Linux** — supported, including Cursor (`$XDG_CONFIG_HOME` / `~/.config/Cursor`)
+  and Amp/OpenCode (`$XDG_DATA_HOME` / `~/.local/share`).
+- **Windows** — best-effort and **not yet tested on a real Windows machine**.
+  Cursor, Amp, and OpenCode are looked up under `%APPDATA%` / `%LOCALAPPDATA%`, but
+  the exact store locations are unverified. If a source isn't found, please report
+  the real path in [#1](https://github.com/moinulmoin/threadlens/issues/1).
+
 ## Project Docs
 
 - [Architecture](ARCHITECTURE.md): source adapters, SQLite cache, ranking, and
   Raycast boundary.
 - [Contributing](CONTRIBUTING.md): local development, tests, and adapter rules.
-- [Security](SECURITY.md): local data boundary and transcript safety.
+- [Security](SECURITY.md): local data boundary and session safety.
 - [Evaluation](eval/README.md): public smoke tests and private acceptance evals.
 - [Launch](launch/README.md): launch copy, checklist, and positioning.
 
@@ -279,7 +292,7 @@ threadlens --db .threadlens/index.sqlite bench .threadlens/eval-local-10.json --
 ```
 
 The committed custom-source fixture can be used for a public development smoke
-eval without private transcripts:
+eval without private sessions:
 
 ```bash
 mkdir -p /private/tmp/threadlens-smoke
@@ -304,7 +317,7 @@ threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp
 - Only user and assistant messages are indexed for Codex and Claude by default.
 - Tool output and system/developer instructions are skipped for Codex and Claude.
 - Pi, OMP, Droid, and OpenCode adapters index user/assistant text parts and skip thinking/tool blocks.
-- Amp Code indexes local prompt history from `~/.local/share/amp/history.jsonl`; the observed local store does not include assistant transcripts, timestamps, or resumable session ids.
+- Amp Code indexes local prompt history from `~/.local/share/amp/history.jsonl`; the observed local store does not include assistant sessions, timestamps, or resumable session ids.
 - Obvious credential fields are skipped in generic and Cursor extraction.
 - Search results are grouped by session and include source, timestamp, cwd, source path, line, snippets, and score.
 - Use `--cwd` to restrict search to sessions whose recorded cwd is that directory or a child directory.

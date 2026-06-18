@@ -5,10 +5,10 @@
 Not primarily. Threadlens is a search tool. Indexing is internal plumbing, and
 resume/open commands are optional actions on search results.
 
-## Does it upload transcripts?
+## Does it upload sessions?
 
 No. V0 reads local session stores and writes a local SQLite cache. It does not
-upload transcript content.
+upload session content.
 
 ## What agents does it support?
 
@@ -44,7 +44,7 @@ Embeddings may be useful later, but they add model choice, privacy boundaries,
 storage costs, and evaluation complexity. The first useful version should find
 sessions from rough keywords and typos without needing a model.
 
-## What happens if a transcript format changes?
+## What happens if a session format changes?
 
 Adapters should fail per file/source and continue refreshing the rest. The raw
 agent session stores remain the source of truth, and the local cache can be
@@ -52,7 +52,7 @@ rebuilt.
 
 ## Can I add another agent?
 
-Yes, if the agent writes JSONL or JSONL-like transcript records. Add a custom
+Yes, if the agent writes JSONL or JSONL-like session records. Add a custom
 source profile with:
 
 - File glob.

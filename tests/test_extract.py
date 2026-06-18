@@ -11,6 +11,30 @@ from threadlens.sources import cursor_messages, opencode_messages, source_paths,
 from threadlens.store import ThreadStore, make_fts_query
 
 
+def _write_opencode_db(db: Path) -> None:
+    db.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db)
+    try:
+        conn.execute("create table session (id text, directory text, path text, title text)")
+        conn.execute("create table message (id text, session_id text, time_created integer, data text)")
+        conn.execute("create table part (id text, message_id text, session_id text, time_created integer, data text)")
+        conn.execute(
+            "insert into session (id, directory, path, title) values (?, ?, ?, ?)",
+            ("ses", "/tmp/open", "", "OpenCode Run"),
+        )
+        conn.execute(
+            "insert into message (id, session_id, time_created, data) values (?, ?, ?, ?)",
+            ("msg", "ses", 1781771840209, json.dumps({"role": "user", "time": {"created": 1781771840209}})),
+        )
+        conn.execute(
+            "insert into part (id, message_id, session_id, time_created, data) values (?, ?, ?, ?, ?)",
+            ("prt", "msg", "ses", 1781771840214, json.dumps({"type": "text", "text": "live opencode transcript text"})),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 class ExtractTests(unittest.TestCase):
     def test_flatten_text_skips_sensitive_keys(self):
         value = {
@@ -276,7 +300,7 @@ class ExtractTests(unittest.TestCase):
             finally:
                 conn.close()
 
-            paths = source_paths("opencode", home=home)
+            paths = source_paths("opencode", home=home, environ={})
 
         self.assertEqual(paths, [db])
 
@@ -287,9 +311,146 @@ class ExtractTests(unittest.TestCase):
             history.parent.mkdir(parents=True)
             history.write_text(json.dumps({"text": "amp prompt", "cwd": "/tmp/amp"}) + "\n", encoding="utf-8")
 
-            paths = source_paths("amp", home=home)
+            paths = source_paths("amp", home=home, environ={})
 
         self.assertEqual(paths, [history])
+
+    def test_cursor_source_paths_detects_linux_config_dir(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            state = home / ".config" / "Cursor" / "User" / "globalStorage" / "state.vscdb"
+            state.parent.mkdir(parents=True)
+            state.write_bytes(b"")
+
+            paths = source_paths("cursor", home=home, environ={})
+
+        self.assertEqual(paths, [state])
+
+    def test_cursor_source_paths_detects_windows_appdata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            state = home / "AppData" / "Roaming" / "Cursor" / "User" / "globalStorage" / "state.vscdb"
+            state.parent.mkdir(parents=True)
+            state.write_bytes(b"")
+
+            paths = source_paths("cursor", home=home, environ={})
+
+        self.assertEqual(paths, [state])
+
+    def test_amp_source_paths_detects_windows_appdata(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            history = home / "AppData" / "Roaming" / "amp" / "history.jsonl"
+            history.parent.mkdir(parents=True)
+            history.write_text(json.dumps({"text": "amp prompt", "cwd": "/tmp/amp"}) + "\n", encoding="utf-8")
+
+            paths = source_paths("amp", home=home, environ={})
+
+        self.assertEqual(paths, [history])
+
+    def test_amp_source_paths_honors_xdg_data_home(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            xdg = home / "custom-data"
+            history = xdg / "amp" / "history.jsonl"
+            history.parent.mkdir(parents=True)
+            history.write_text(json.dumps({"text": "amp prompt", "cwd": "/tmp/amp"}) + "\n", encoding="utf-8")
+
+            paths = source_paths("amp", home=home, environ={"XDG_DATA_HOME": str(xdg)})
+
+        self.assertEqual(paths, [history])
+
+    def test_cursor_source_paths_honors_appdata_env(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            appdata = home / "custom-roaming"
+            state = appdata / "Cursor" / "User" / "globalStorage" / "state.vscdb"
+            state.parent.mkdir(parents=True)
+            state.write_bytes(b"")
+
+            paths = source_paths("cursor", home=home, environ={"APPDATA": str(appdata)})
+
+        self.assertEqual(paths, [state])
+
+    def test_amp_source_paths_found_when_xdg_set_but_store_in_default(self):
+        # XDG_DATA_HOME points elsewhere, but the agent still wrote to ~/.local/share.
+        # The conventional path must remain a candidate, not be replaced.
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            (home / "custom-xdg").mkdir()
+            history = home / ".local" / "share" / "amp" / "history.jsonl"
+            history.parent.mkdir(parents=True)
+            history.write_text(json.dumps({"text": "amp prompt", "cwd": "/tmp/amp"}) + "\n", encoding="utf-8")
+
+            paths = source_paths("amp", home=home, environ={"XDG_DATA_HOME": str(home / "custom-xdg")})
+
+        self.assertEqual(paths, [history])
+
+    def test_cursor_source_paths_found_when_xdg_config_set_but_store_in_default(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            (home / "custom-xdg").mkdir()
+            state = home / ".config" / "Cursor" / "User" / "globalStorage" / "state.vscdb"
+            state.parent.mkdir(parents=True)
+            state.write_bytes(b"")
+
+            paths = source_paths("cursor", home=home, environ={"XDG_CONFIG_HOME": str(home / "custom-xdg")})
+
+        self.assertEqual(paths, [state])
+
+    def test_opencode_source_paths_found_when_xdg_set_but_store_in_default(self):
+        # XDG_DATA_HOME points elsewhere, but OpenCode still wrote to ~/.local/share.
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            (home / "custom-xdg").mkdir()
+            db = home / ".local" / "share" / "opencode" / "opencode.db"
+            _write_opencode_db(db)
+
+            paths = source_paths("opencode", home=home, environ={"XDG_DATA_HOME": str(home / "custom-xdg")})
+
+        self.assertEqual(paths, [db])
+
+    def test_amp_source_paths_found_when_appdata_set_but_store_in_default(self):
+        # APPDATA points elsewhere, but amp still wrote to the conventional AppData/Roaming.
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            history = home / "AppData" / "Roaming" / "amp" / "history.jsonl"
+            history.parent.mkdir(parents=True)
+            history.write_text(json.dumps({"text": "amp prompt", "cwd": "/tmp/amp"}) + "\n", encoding="utf-8")
+
+            paths = source_paths("amp", home=home, environ={"APPDATA": str(home / "custom-roaming")})
+
+        self.assertEqual(paths, [history])
+
+    def test_amp_source_paths_returns_both_xdg_and_default_stores(self):
+        # Sessions in BOTH $XDG_DATA_HOME/amp and conventional ~/.local/share/amp must both be found.
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            xdg = home / "custom-xdg"
+            xdg_history = xdg / "amp" / "history.jsonl"
+            xdg_history.parent.mkdir(parents=True)
+            xdg_history.write_text(json.dumps({"text": "xdg amp", "cwd": "/tmp/x"}) + "\n", encoding="utf-8")
+            default_history = home / ".local" / "share" / "amp" / "history.jsonl"
+            default_history.parent.mkdir(parents=True)
+            default_history.write_text(json.dumps({"text": "default amp", "cwd": "/tmp/d"}) + "\n", encoding="utf-8")
+
+            paths = source_paths("amp", home=home, environ={"XDG_DATA_HOME": str(xdg)})
+
+        self.assertEqual(paths, [xdg_history, default_history])
+
+    def test_opencode_source_paths_returns_both_xdg_and_default_dbs(self):
+        # Databases in BOTH $XDG_DATA_HOME/opencode and conventional ~/.local/share/opencode must both be found.
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            xdg = home / "custom-xdg"
+            xdg_db = xdg / "opencode" / "opencode.db"
+            _write_opencode_db(xdg_db)
+            default_db = home / ".local" / "share" / "opencode" / "opencode.db"
+            _write_opencode_db(default_db)
+
+            paths = source_paths("opencode", home=home, environ={"XDG_DATA_HOME": str(xdg)})
+
+        self.assertEqual(paths, [xdg_db, default_db])
 
     def test_store_search(self):
         with tempfile.TemporaryDirectory() as tmp:
