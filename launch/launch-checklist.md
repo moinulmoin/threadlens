@@ -9,6 +9,10 @@
 - [ ] Public copy does not claim universal agent support.
 - [ ] Public copy does not expose private transcript snippets.
 - [ ] Resume commands are described as optional copyable actions.
+- [ ] Bundled Codex skill is packaged and discoverable with `threadlens skill`.
+- [ ] `LICENSE` exists and package metadata points to it.
+- [ ] Logo asset renders in README and launch surfaces.
+- [ ] Release workflow builds Python package artifacts from a tag.
 
 ## Verification Gates
 
@@ -61,19 +65,20 @@ npm --prefix raycast run build
 Last verified in this workspace:
 
 - Python compile: passed.
-- Unit tests: 39 passed.
+- Unit tests: 47 passed, including bundled-skill coverage.
 - `doctor --json`: passed.
-- Installed CLI index: ready with 110,205 messages.
+- Installed CLI index: ready with 110,288 messages.
 - Expanded source counts: Codex 26,992, Claude 2,116, Cursor 5, Pi 468, OMP
-  53,660, Droid 26,960, OpenCode 4.
+  53,660, Amp 83, Droid 26,960, OpenCode 4.
 - OpenCode source: indexed 4 messages from 1 local session.
-- New-source refresh: Pi, OMP, and Droid refreshed into the real user-level
+- New-source refresh: Pi, OMP, Amp, and Droid refreshed into the real user-level
   index.
-- Source-restricted searches for Pi, OMP, and Droid returned results with
-  copyable resume commands.
+- Source-restricted searches for Pi, OMP, Amp, and Droid returned results; Pi,
+  OMP, and Droid include copyable resume commands while Amp currently does not
+  expose resumable session ids.
 - OpenCode source-restricted search returned the new local OpenCode session with
   a copyable `opencode --session` command.
-- Private eval bench: p95 136.5ms, below the 250ms gate.
+- Private eval bench: p95 148.9ms, below the 250ms gate.
 - `doctor --json` reports the index as ready and reports freshness separately;
   active Codex sessions can still show stale-file hints while the index remains
   usable.
@@ -84,8 +89,14 @@ Last verified in this workspace:
 - Raycast TypeScript: passed.
 - Raycast lint: passed.
 - Raycast audit: 0 vulnerabilities.
-- Raycast build: passed.
+- Raycast build: passed before this launch-prep/docs/package pass; Raycast source
+  did not change in this pass.
 - Project-scoped search: `--cwd` verified against the Threadlens repo.
+- Raycast result primary action: copy resume command before details.
+- Bundled skill command: `threadlens skill --json` added and verified from a
+  temporary installed wheel.
+- Python sdist and wheel build: passed; wheel includes `SKILL.md` and
+  `agents/openai.yaml`.
 
 Do not publish private corpus counts or private query names unless reviewed.
 

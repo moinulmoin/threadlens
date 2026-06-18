@@ -5,7 +5,7 @@
 Built a first answer: Threadlens.
 
 Local search across coding-agent sessions. Codex, Claude Code, Cursor, Pi, OMP,
-Droid, OpenCode, and custom JSONL sources. SQLite FTS, prefix and
+Amp, Droid, OpenCode, and custom JSONL sources. SQLite FTS, prefix and
 typo-tolerant fallbacks, grouped session results, snippets, Raycast, and
 copyable resume/open actions.
 
@@ -15,7 +15,7 @@ No cloud. No embeddings in V0. Just the boring thing that works.
 
 I built Threadlens: local search for coding-agent sessions.
 
-It indexes local Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and
+It indexes local Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and
 custom JSONL sources, then gives you fast session-level results with snippets
 from the CLI or Raycast.
 
@@ -25,14 +25,14 @@ No cloud. No hosted sync. Just local search that works.
 
 1. I kept forgetting which coding-agent session had the thing I needed.
 
-Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, custom harnesses. Each has
-history, but none of it feels like one reliable local search surface.
+Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, custom harnesses.
+Each has history, but none of it feels like one reliable local search surface.
 
 So I built Threadlens.
 
 2. Threadlens is local search for coding-agent sessions.
 
-V0 searches Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and custom
+V0 searches Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and custom
 JSONL sources.
 
 Results are grouped by source/session, with cwd, timestamps, snippets, and
@@ -73,7 +73,7 @@ session transcripts.
 
 Included:
 
-- CLI search over local Codex, Claude Code, Cursor, Pi, OMP, Droid, and OpenCode sessions.
+- CLI search over local Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and OpenCode sessions.
 - Custom JSONL source profiles for additional local agents.
 - SQLite FTS cache with exact, prefix, and bounded fuzzy matching.
 - Session-grouped results with snippets, cwd, timestamps, and source path.
@@ -96,7 +96,7 @@ Not included in V0:
 I built Threadlens, a local-first search tool for coding-agent sessions.
 
 The goal is narrow: find the session, not build a giant memory platform. V0
-indexes local Codex, Claude Code, Cursor, Pi, OMP, Droid, and OpenCode
+indexes local Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and OpenCode
 transcripts, and lets you add custom JSONL agent sources with config instead of
 code.
 
@@ -119,7 +119,7 @@ Threadlens
 
 ## Landing Page Subcopy
 
-Search local Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and custom
+Search local Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and custom
 agent sessions from one CLI or Raycast command. Your transcripts stay on your
 machine.
 

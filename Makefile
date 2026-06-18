@@ -1,8 +1,8 @@
 SMOKE_DIR ?= /private/tmp/threadlens-smoke
 
-.PHONY: verify python raycast smoke doctor clean
+.PHONY: verify python raycast smoke doctor skill clean
 
-verify: python raycast smoke doctor
+verify: python raycast smoke doctor skill
 
 python:
 	python3 -B -m py_compile threadlens/*.py
@@ -40,7 +40,11 @@ smoke:
 doctor:
 	python3 -B -m threadlens doctor --json
 
+skill:
+	python3 -B -m unittest tests.test_skill
+	python3 -B -m threadlens skill --json
+
 clean:
-	rm -rf build threadlens.egg-info
+	rm -rf build dist threadlens.egg-info
 	find threadlens tests -type d -name __pycache__ -prune -exec rm -rf {} +
 	find threadlens tests -type f -name '*.pyc' -delete

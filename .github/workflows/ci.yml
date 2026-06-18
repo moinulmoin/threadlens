@@ -18,6 +18,8 @@ jobs:
         run: python -B -m py_compile threadlens/*.py
       - name: Run unit tests
         run: python -B -m unittest discover -s tests
+      - name: Verify packaged skill pointer
+        run: python -B -m threadlens skill --json
       - name: Run custom source smoke eval
         run: |
           python -B -m threadlens \
@@ -41,6 +43,13 @@ jobs:
             --db "$RUNNER_TEMP/threadlens-smoke.sqlite" \
             --config "$RUNNER_TEMP/threadlens-sources.json" \
             eval eval/custom-source.eval.json
+      - name: Build Python package
+        run: |
+          python -m pip install --upgrade build
+          python -m build
+          python -m pip install dist/*.whl
+          threadlens --version
+          threadlens skill --json
 
   raycast:
     runs-on: ubuntu-latest

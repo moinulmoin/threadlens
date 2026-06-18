@@ -1,0 +1,4 @@
+interface:
+  display_name: "Threadlens"
+  short_description: "Search local coding-agent sessions"
+  default_prompt: "Use $threadlens to find relevant local coding-agent sessions before answering."

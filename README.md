@@ -1,5 +1,14 @@
 # Threadlens
 
+![Threadlens logo](assets/threadlens-logo.svg)
+
+[![npm version](https://img.shields.io/npm/v/threadlens?logo=npm&color=cb3837)](https://www.npmjs.com/package/threadlens)
+[![PyPI version](https://img.shields.io/pypi/v/threadlens?logo=pypi&logoColor=white&color=3775a9)](https://pypi.org/project/threadlens/)
+[![Python](https://img.shields.io/pypi/pyversions/threadlens?logo=python&logoColor=white)](https://pypi.org/project/threadlens/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
+**Find the coding-agent session you half-remember — without uploading your transcripts.**
+
 Threadlens is a local-first search tool for coding-agent sessions. It refreshes
 local agent session stores into a private SQLite FTS cache so you can answer
 questions like:
@@ -9,9 +18,20 @@ questions like:
 It does not upload transcripts. Raw agent session stores remain the source of
 truth; the Threadlens index is disposable and rebuildable.
 
+## Quickstart
+
+```bash
+uv tool install threadlens     # recommended (or: npm install -g threadlens)
+threadlens start               # discover local sources and build the index
+threadlens search "plunk otp"  # search every local agent session at once
+```
+
+Searches your local **Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and
+OpenCode** sessions — plus any custom JSONL agent you add with config, not code.
+
 ## Status
 
-V0.1 is focused on reliable local keyword, prefix, and typo-tolerant search.
+v1.0 is focused on reliable local keyword, prefix, and typo-tolerant search.
 There are no embeddings, hosted sync, background daemon, or team features.
 
 ## Project Docs
@@ -25,7 +45,28 @@ There are no embeddings, hosted sync, background daemon, or team features.
 
 ## Install
 
-From this checkout:
+### Recommended: uv (or pipx)
+
+`uv` can fetch a compatible Python for you, so this is the most reliable path:
+
+```bash
+uv tool install threadlens     # global install, on your PATH
+uvx threadlens search "..."    # run without installing
+```
+
+Prefer pipx? `pipx install threadlens` works the same way.
+
+### npm
+
+If you live in npm-land, the same CLI is published there. It runs the bundled
+Python source with your own interpreter, so it needs **Python 3.10+ on PATH**:
+
+```bash
+npm install -g threadlens
+npx threadlens search "..."    # run without installing
+```
+
+### From source
 
 ```bash
 uv tool install .
@@ -49,6 +90,13 @@ Verify the checkout:
 
 ```bash
 make verify
+```
+
+Build release artifacts locally:
+
+```bash
+python3 -m pip install --upgrade build
+python3 -m build
 ```
 
 ## Initial Scope
@@ -193,6 +241,23 @@ Print a verified resume command when the source supports one:
 ```bash
 threadlens resume codex:019...
 ```
+
+## Bundled Codex Skill
+
+Threadlens ships a small Codex skill with the Python package. It teaches an
+agent when and how to use the CLI for local session retrieval without turning
+Threadlens into a memory product.
+
+After installing the CLI, print the bundled skill path:
+
+```bash
+threadlens skill
+threadlens skill --json
+```
+
+Copy or symlink that `threadlens` skill folder into the agent's local skills
+directory when the host supports filesystem skills. The Raycast extension does
+not package the skill; it stays a thin UI over the CLI.
 
 Run query-to-session evaluation:
 

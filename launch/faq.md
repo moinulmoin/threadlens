@@ -19,6 +19,7 @@ Default sources:
 - Cursor local records.
 - Pi local JSONL sessions.
 - OMP local JSONL sessions.
+- Amp Code local prompt history.
 - Droid local JSONL sessions.
 - OpenCode local SQLite sessions when the database contains sessions.
 - Custom JSONL sources.
@@ -26,8 +27,9 @@ Default sources:
 ## Which sources are most likely to drift?
 
 Cursor and OpenCode use local formats that are less stable than the JSONL-backed
-agents. Their adapters should fail per store/file if formats change, without
-breaking refresh for the rest.
+agents. Amp Code support depends on the local prompt-history file shape. These
+adapters should fail per store/file if formats change, without breaking refresh
+for the rest.
 
 ## Is it semantic search?
 

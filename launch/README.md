@@ -4,7 +4,7 @@ This folder contains the launch material for Threadlens V0.
 
 Threadlens is a local-first search tool for coding-agent sessions. The public
 message should stay tight: it searches local Codex, Claude Code, Cursor, Pi,
-OMP, Droid, and OpenCode sessions where local stores exist, supports custom
+OMP, Amp, Droid, and OpenCode sessions where local stores exist, supports custom
 JSONL agent sources, and exposes both CLI and Raycast workflows.
 
 ## Assets

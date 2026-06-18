@@ -1,0 +1,42 @@
+{
+  "name": "threadlens",
+  "version": "1.0.0",
+  "description": "Local cross-harness search for agent threads",
+  "bin": {
+    "threadlens": "bin/threadlens.js"
+  },
+  "files": [
+    "bin/",
+    "vendor/"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "prepack": "node scripts/sync.mjs"
+  },
+  "keywords": [
+    "agents",
+    "cli",
+    "search",
+    "sqlite",
+    "raycast",
+    "codex",
+    "claude-code",
+    "cursor"
+  ],
+  "license": "MIT",
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moinulmoin/threadlens.git"
+  },
+  "homepage": "https://github.com/moinulmoin/threadlens#readme",
+  "bugs": {
+    "url": "https://github.com/moinulmoin/threadlens/issues"
+  }
+}

@@ -9,6 +9,7 @@ import sys
 import time
 import urllib.parse
 from collections import Counter
+from importlib import resources
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -110,6 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     stats_parser = sub.add_parser("stats", help="Show index counts")
     stats_parser.set_defaults(_stats=True)
 
+    skill_parser = sub.add_parser("skill", help="Show the bundled Codex skill path")
+    skill_parser.add_argument("--json", action="store_true", help="Emit JSON")
+
     args = parser.parse_args(argv)
 
     if args.command == "sources":
@@ -132,6 +136,8 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_bench(args)
     if args.command == "stats":
         return cmd_stats(args)
+    if args.command == "skill":
+        return cmd_skill(args)
     return 2
 
 
@@ -1367,3 +1373,23 @@ def cmd_stats(args: argparse.Namespace) -> int:
         return 0
     finally:
         store.close()
+
+
+def cmd_skill(args: argparse.Namespace) -> int:
+    skill_path = resources.files("threadlens").joinpath("skills", "threadlens")
+    skill_md = skill_path.joinpath("SKILL.md")
+    if args.json:
+        print(
+            json.dumps(
+                {
+                    "name": "threadlens",
+                    "path": str(skill_path),
+                    "skill_md": str(skill_md),
+                },
+                ensure_ascii=False,
+            )
+        )
+        return 0
+    print(skill_path)
+    print(f"SKILL.md: {skill_md}")
+    return 0

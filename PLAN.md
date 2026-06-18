@@ -3,7 +3,7 @@
 ## Goal
 
 Build a reliable local search system for coding-agent sessions across Codex,
-Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and future local agents.
+Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and future local agents.
 
 Threadlens is not primarily a resume tool. It is a search system. Indexing is
 internal plumbing, and resume/open commands are optional result actions.
@@ -22,6 +22,7 @@ right local agent sessions grouped by source/session with useful snippets.
   - Cursor local SQLite/session state.
   - Pi JSONL sessions under `~/.pi/agent/sessions`.
   - OMP JSONL sessions under `~/.omp/agent/sessions`.
+  - Amp Code prompt history under `~/.local/share/amp/history.jsonl`.
   - Droid JSONL sessions under `~/.factory/sessions`.
   - OpenCode SQLite sessions under `~/.local/share/opencode/opencode.db` when sessions exist.
 - Experimental sources:

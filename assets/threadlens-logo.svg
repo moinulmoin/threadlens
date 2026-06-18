@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 180" role="img" aria-labelledby="title desc">
+  <title id="title">Threadlens</title>
+  <desc id="desc">Threadlens logo with a search lens over terminal threads.</desc>
+  <rect width="640" height="180" rx="36" fill="#0d0d0d"/>
+  <g transform="translate(44 38)">
+    <rect x="0" y="0" width="104" height="104" rx="24" fill="#f7f7f2"/>
+    <path d="M27 34L45 52L27 70" fill="none" stroke="#0d0d0d" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M54 70H78" fill="none" stroke="#0d0d0d" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="78" cy="26" r="18" fill="none" stroke="#f97316" stroke-width="8"/>
+    <path d="M91 39L106 54" fill="none" stroke="#f97316" stroke-width="8" stroke-linecap="round"/>
+  </g>
+  <text x="184" y="82" fill="#fafafa" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="48" font-weight="760">Threadlens</text>
+  <text x="186" y="122" fill="#a3a3a3" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20" font-weight="500">Local search for coding-agent sessions</text>
+</svg>

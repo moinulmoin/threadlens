@@ -11,7 +11,7 @@ Local search for coding-agent sessions.
 ## Description
 
 Threadlens helps developers search local coding-agent session history from one
-place. V0 supports Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and
+place. V0 supports Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and
 custom JSONL agent sources through config.
 
 It uses a local SQLite FTS cache with prefix and typo-tolerant fallbacks, then
@@ -34,7 +34,7 @@ content is not uploaded.
 I chose keyword/prefix/typo-tolerant search before embeddings because the first
 problem is reliability: can I find the session from the rough words I remember?
 
-V0 supports Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and custom
+V0 supports Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and custom
 JSONL agents through source profiles.
 
 ## Gallery Ideas

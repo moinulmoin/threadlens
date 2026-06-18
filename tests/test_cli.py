@@ -31,7 +31,24 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, 0)
         self.assertEqual(stderr.getvalue(), "")
-        self.assertIn("threadlens 0.1.0", stdout.getvalue())
+        self.assertIn("threadlens 1.0.0", stdout.getvalue())
+
+    def test_skill_command_prints_bundled_skill_path(self):
+        code, stdout, stderr = self.run_cli(["skill"])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(stderr, "")
+        self.assertIn("threadlens/skills/threadlens", stdout)
+        self.assertIn("SKILL.md", stdout)
+
+    def test_skill_command_json(self):
+        code, stdout, stderr = self.run_cli(["skill", "--json"])
+
+        self.assertEqual(code, 0)
+        self.assertEqual(stderr, "")
+        payload = json.loads(stdout)
+        self.assertEqual(payload["name"], "threadlens")
+        self.assertTrue(payload["skill_md"].endswith("SKILL.md"))
 
     def write_codex_session(self, home: Path, *, text: str = "alpha setup phrase") -> Path:
         session_dir = home / ".codex" / "sessions"

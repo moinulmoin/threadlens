@@ -49,7 +49,7 @@ Threadlens V0 is:
 - CLI-first.
 - Raycast-ready.
 - Built on SQLite FTS.
-- Designed for Codex, Claude Code, Cursor, Pi, OMP, Droid, and OpenCode local
+- Designed for Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and OpenCode local
   stores.
 - Extensible with custom JSONL source profiles.
 - Conservative about local formats that can drift, especially Cursor and
@@ -60,7 +60,7 @@ Threadlens V0 is:
 - Local transcripts stay local.
 - Threadlens does not upload session content.
 - The cache is disposable and rebuildable from the raw agent session stores.
-- Codex, Claude Code, Cursor, Pi, OMP, Droid, and OpenCode are built-in sources.
+- Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and OpenCode are built-in sources.
 - OpenCode is indexed when its local database contains sessions.
 - Custom JSONL agents can be added without code changes.
 - Raycast is a thin UI over the CLI.
@@ -98,7 +98,7 @@ Short:
 
 Practical:
 
-> Search Codex, Claude Code, Cursor, Pi, OMP, Droid, OpenCode, and custom local
+> Search Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and custom local
 > agent sessions from one CLI or Raycast command.
 
 For launch:
@@ -109,5 +109,5 @@ For launch:
 For shadcn reply:
 
 > Built the boring version that should actually hold up: local SQLite FTS over
-> Codex, Claude, Cursor, Pi, OMP, Droid, OpenCode, and custom sources, grouped
+> Codex, Claude, Cursor, Pi, OMP, Amp, Droid, OpenCode, and custom sources, grouped
 > session results, snippets, and copyable resume/open actions.

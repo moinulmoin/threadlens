@@ -1,6 +1,13 @@
+.DS_Store
 .threadlens/
 __pycache__/
 *.pyc
 build/
+dist/
 *.egg-info/
 raycast/node_modules/
+npm/node_modules/
+npm/vendor/
+npm/*.tgz
+site/
+launch/video/
