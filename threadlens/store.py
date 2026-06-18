@@ -208,6 +208,7 @@ class ThreadStore:
         *,
         limit: int = 10,
         source: str | None = None,
+        cwd_prefix: str | None = None,
     ) -> list[dict[str, Any]]:
         tokens = tokenize_query(query)
         if not tokens or limit <= 0:
@@ -231,6 +232,7 @@ class ThreadStore:
                     fts_query,
                     tokens,
                     source=source,
+                    cwd_prefix=cwd_prefix,
                     stage=stage,
                     base_score=base_score,
                     limit=row_limit,
@@ -243,7 +245,14 @@ class ThreadStore:
                 return sessions[:limit]
 
         if not sessions:
-            candidates.extend(self._fuzzy_message_candidates(tokens, source=source, limit=row_limit))
+            candidates.extend(
+                self._fuzzy_message_candidates(
+                    tokens,
+                    source=source,
+                    cwd_prefix=cwd_prefix,
+                    limit=row_limit,
+                )
+            )
         return sorted_sessions(candidates, tokens=tokens)[:limit]
 
     def _search_message_candidates(
@@ -252,6 +261,7 @@ class ThreadStore:
         tokens: list[str],
         *,
         source: str | None,
+        cwd_prefix: str | None,
         stage: str,
         base_score: float,
         limit: int,
@@ -261,6 +271,9 @@ class ThreadStore:
         if source:
             where += " and messages.source = ?"
             params.append(source)
+        if cwd_prefix:
+            where += " and (messages.cwd = ? or messages.cwd like ?)"
+            params.extend([cwd_prefix, f"{cwd_prefix.rstrip('/')}/%"])
         params.append(limit)
 
         sql = f"""
@@ -311,6 +324,7 @@ class ThreadStore:
         tokens: list[str],
         *,
         source: str | None,
+        cwd_prefix: str | None,
         limit: int,
     ) -> list[dict[str, Any]]:
         if limit <= 0:
@@ -321,6 +335,13 @@ class ThreadStore:
         if source:
             where = "where source = ?"
             params.append(source)
+        if cwd_prefix:
+            clause = "(cwd = ? or cwd like ?)"
+            if where:
+                where += f" and {clause}"
+            else:
+                where = f"where {clause}"
+            params.extend([cwd_prefix, f"{cwd_prefix.rstrip('/')}/%"])
         sql = f"""
             select *
             from messages

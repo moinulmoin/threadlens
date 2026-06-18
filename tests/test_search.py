@@ -13,6 +13,7 @@ def make_message(
     thread_id: str = "t1",
     message_id: str = "m1",
     timestamp: str = "2026-06-17T00:00:00Z",
+    cwd: str = "/tmp/project",
     title: str = "search",
     text: str,
 ) -> ThreadMessage:
@@ -24,7 +25,7 @@ def make_message(
         line=1,
         timestamp=timestamp,
         role="user",
-        cwd="/tmp/project",
+        cwd=cwd,
         title=title,
         text=text,
     )
@@ -70,6 +71,7 @@ class SearchTests(unittest.TestCase):
                     tokens: list[str],
                     *,
                     source: str | None,
+                    cwd_prefix: str | None,
                     stage: str,
                     base_score: float,
                     limit: int,
@@ -97,7 +99,13 @@ class SearchTests(unittest.TestCase):
                         ]
                     return []
 
-                def fail_fuzzy(tokens: list[str], *, source: str | None, limit: int) -> list[dict[str, Any]]:
+                def fail_fuzzy(
+                    tokens: list[str],
+                    *,
+                    source: str | None,
+                    cwd_prefix: str | None,
+                    limit: int,
+                ) -> list[dict[str, Any]]:
                     raise AssertionError("fuzzy fallback should not be needed after a strong any match")
 
                 store._search_message_candidates = fake_search  # type: ignore[method-assign]
@@ -187,6 +195,7 @@ class SearchTests(unittest.TestCase):
                     tokens: list[str],
                     *,
                     source: str | None,
+                    cwd_prefix: str | None,
                     stage: str,
                     base_score: float,
                     limit: int,
@@ -196,12 +205,19 @@ class SearchTests(unittest.TestCase):
                         fts_query,
                         tokens,
                         source=source,
+                        cwd_prefix=cwd_prefix,
                         stage=stage,
                         base_score=base_score,
                         limit=limit,
                     )
 
-                def fail_fuzzy(tokens: list[str], *, source: str | None, limit: int) -> list[dict[str, Any]]:
+                def fail_fuzzy(
+                    tokens: list[str],
+                    *,
+                    source: str | None,
+                    cwd_prefix: str | None,
+                    limit: int,
+                ) -> list[dict[str, Any]]:
                     raise AssertionError("fuzzy fallback should not run for a strong exact match")
 
                 store._search_message_candidates = tracked_search  # type: ignore[method-assign]
@@ -213,6 +229,32 @@ class SearchTests(unittest.TestCase):
 
         self.assertEqual(calls, ["exact"])
         self.assertEqual(results[0]["result_id"], "codex:exact-target")
+
+    def test_cwd_filter_limits_results_to_project_tree(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = ThreadStore(Path(tmp) / "index.sqlite")
+            try:
+                messages = [
+                    make_message(
+                        thread_id="target",
+                        message_id="target",
+                        cwd="/tmp/project/app",
+                        text="debug plunk otp delivery",
+                    ),
+                    make_message(
+                        thread_id="other",
+                        message_id="other",
+                        cwd="/tmp/other",
+                        text="debug plunk otp delivery",
+                    ),
+                ]
+                store.add_messages(messages)
+
+                results = store.search_sessions("plunk otp", cwd_prefix="/tmp/project", limit=10)
+            finally:
+                store.close()
+
+        self.assertEqual([result["result_id"] for result in results], ["codex:target"])
 
 
 if __name__ == "__main__":

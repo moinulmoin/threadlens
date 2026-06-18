@@ -75,6 +75,7 @@ def main(argv: list[str] | None = None) -> int:
     search_parser = sub.add_parser("search", help="Search indexed sessions")
     search_parser.add_argument("query", nargs="+")
     search_parser.add_argument("--source", help="Restrict to one source")
+    search_parser.add_argument("--cwd", "--project", dest="cwd", help="Restrict to sessions from this cwd/project directory")
     search_parser.add_argument("--limit", type=int, default=10)
     search_parser.add_argument("--json", action="store_true", help="Emit JSON lines")
     search_parser.add_argument("--no-bootstrap", action="store_true", help="Do not auto-index when the search index is empty")
@@ -606,6 +607,7 @@ def cmd_search(args: argparse.Namespace) -> int:
                 " ".join(args.query),
                 limit=args.limit,
                 source=args.source,
+                cwd_prefix=normalize_cwd_filter(args.cwd) if args.cwd else None,
             )
         except sqlite3.Error as exc:
             print(f"Search failed: {exc}", file=sys.stderr)
@@ -641,6 +643,10 @@ def search_needs_bootstrap(store: ThreadStore, source: str | None) -> bool:
     if source:
         return store.message_count(source) == 0
     return store.message_count() == 0
+
+
+def normalize_cwd_filter(value: str) -> str:
+    return str(Path(value).expanduser().resolve(strict=False))
 
 
 def index_empty_message(source: str | None) -> str:
