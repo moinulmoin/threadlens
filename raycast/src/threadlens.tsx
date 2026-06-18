@@ -231,25 +231,21 @@ function detailMarkdown(result: ThreadlensResult): string {
     ? result.best_snippets
         .map(
           (snippet) =>
-            `### ${escapeMarkdown(roleLabel(snippet.role))} - ${escapeMarkdown(formatDateTime(snippet.timestamp))}\n\n${escapeMarkdown(
-              snippet.snippet,
-            )}`,
+            `### ${markdownInline(roleLabel(snippet.role))} - ${markdownInline(formatDateTime(snippet.timestamp))}\n\n${codeBlock(cleanSnippet(snippet.snippet))}`,
         )
         .join("\n\n---\n\n")
     : "_No snippets returned._";
 
   const terms = result.matched_terms.length
-    ? result.matched_terms
-        .map((term) => `\`${escapeMarkdown(term)}\``)
-        .join(", ")
+    ? result.matched_terms.map((term) => `\`${markdownCode(term)}\``).join(", ")
     : "-";
 
-  return `# ${escapeMarkdown(displayTitle(result))}
+  return `## Match Context
 
-${escapeMarkdown(compactPath(result.cwd))}
-
-**Agent:** ${escapeMarkdown(sourceLabel(result.source))}  
-**Last activity:** ${escapeMarkdown(formatDateTime(result.last_timestamp))}  
+**Title:** ${markdownInline(displayTitle(result))}  
+**Directory:** ${markdownInline(compactPath(result.cwd))}  
+**Agent:** ${markdownInline(sourceLabel(result.source))}  
+**Last activity:** ${markdownInline(formatDateTime(result.last_timestamp))}  
 **Matched terms:** ${terms}
 
 ---
@@ -259,16 +255,62 @@ ${snippets}`;
 
 function displayTitle(result: ThreadlensResult): string {
   const title = (result.title || "").trim();
-  if (title && title !== result.session_id) {
+  const directory = lastPathPart(result.cwd);
+
+  if (title && title !== result.session_id && title !== directory) {
     return title;
   }
 
-  const directory = lastPathPart(result.cwd);
+  const headline = snippetHeadline(result);
+  if (headline) {
+    return headline;
+  }
+
   if (directory) {
     return directory;
   }
 
   return result.session_id;
+}
+
+function snippetHeadline(result: ThreadlensResult): string {
+  for (const snippet of result.best_snippets) {
+    const text = cleanSnippet(snippet.snippet);
+    if (!text || isLowSignalSnippet(text)) {
+      continue;
+    }
+    return truncateMiddle(text, 88);
+  }
+  return "";
+}
+
+function cleanSnippet(value: string): string {
+  return value
+    .replace(/\[[^\]]+\]/g, (match) => match.slice(1, -1))
+    .replace(/\[`([^`]+)`\]\([^)]+\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .replace(/^\.{3}/, "")
+    .replace(/\.{3}$/, "")
+    .trim();
+}
+
+function isLowSignalSnippet(value: string): boolean {
+  const lower = value.toLowerCase();
+  if (lower.includes("environment_context") || lower.includes("/cwd")) {
+    return true;
+  }
+  return lower.length < 4;
+}
+
+function truncateMiddle(value: string, maxLength: number): string {
+  if (value.length <= maxLength) {
+    return value;
+  }
+  const head = Math.ceil((maxLength - 3) * 0.7);
+  const tail = maxLength - 3 - head;
+  return `${value.slice(0, head)}...${value.slice(-tail)}`;
 }
 
 function compactPath(value: string): string {
@@ -477,13 +519,22 @@ function parseThreadlensResults(stdout: string): ThreadlensResult[] {
   return results;
 }
 
-function escapeMarkdown(value: string): string {
+function markdownInline(value: string): string {
   return value
     .replace(/\\/g, "\\\\")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/([`*_{}[\]()#+\-.!|])/g, "\\$1");
+    .replace(/([`*_{}[\]()#|])/g, "\\$1");
+}
+
+function markdownCode(value: string): string {
+  return value.replace(/`/g, "\\`");
+}
+
+function codeBlock(value: string): string {
+  const fence = value.includes("```") ? "````" : "```";
+  return `${fence}text\n${value}\n${fence}`;
 }
 
 function isAbortError(error: unknown): boolean {
