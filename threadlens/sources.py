@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from .extract import (
+    amp_history_messages,
     agent_jsonl_messages,
     claude_messages,
     codex_messages,
@@ -23,8 +24,8 @@ from .models import ThreadMessage
 from .profiles import SourceProfile
 
 
-DEFAULT_SOURCE_NAMES = ("codex", "claude", "cursor", "pi", "omp", "droid", "opencode")
-SOURCE_NAMES = ("codex", "claude", "cursor", "pi", "omp", "droid", "opencode")
+DEFAULT_SOURCE_NAMES = ("codex", "claude", "cursor", "pi", "omp", "amp", "droid", "opencode")
+SOURCE_NAMES = ("codex", "claude", "cursor", "pi", "omp", "amp", "droid", "opencode")
 
 
 def source_paths(source: str, home: Path | None = None) -> list[Path]:
@@ -51,6 +52,11 @@ def source_paths(source: str, home: Path | None = None) -> list[Path]:
         return sorted((home / ".pi" / "agent" / "sessions").glob("**/*.jsonl"))
     if source == "omp":
         return sorted((home / ".omp" / "agent" / "sessions").glob("**/*.jsonl"))
+    if source == "amp":
+        history = home / ".local" / "share" / "amp" / "history.jsonl"
+        if history.exists():
+            return [history]
+        return []
     if source == "droid":
         return sorted((home / ".factory" / "sessions").glob("**/*.jsonl"))
     if source == "opencode":
@@ -87,6 +93,8 @@ def iter_path_messages(source: str, path: Path) -> Iterator[ThreadMessage]:
         yield from cursor_messages(path)
     elif source in {"pi", "omp", "droid"}:
         yield from agent_jsonl_messages(path, source=source)
+    elif source == "amp":
+        yield from amp_history_messages(path)
     elif source == "opencode":
         yield from opencode_messages(path)
 

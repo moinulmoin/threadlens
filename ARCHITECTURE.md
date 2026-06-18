@@ -25,9 +25,10 @@ disposable and can be rebuilt.
 
 ## Source Adapters
 
-Built-in adapters cover Codex, Claude Code, Cursor, Pi, OMP, Droid, and
-OpenCode. JSONL-compatible agents can be added with `threadlens sources add`
-without changing code.
+Built-in adapters cover Codex, Claude Code, Cursor, Pi, OMP, Amp Code, Droid,
+and OpenCode. Amp Code currently indexes the local prompt history file, not a
+full assistant transcript. JSONL-compatible agents can be added with
+`threadlens sources add` without changing code.
 
 Adapters must treat transcript content as untrusted data. They should extract
 text and metadata, not execute or follow instructions from transcripts.

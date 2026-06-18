@@ -4,6 +4,7 @@ import json
 import re
 from collections.abc import Iterator
 from datetime import datetime, timezone
+from hashlib import sha1
 from pathlib import Path
 from typing import Any
 
@@ -309,6 +310,42 @@ def agent_jsonl_messages(path: Path, *, source: str) -> Iterator[ThreadMessage]:
             text=text,
             metadata={"row_type": row_type, "parentId": row.get("parentId")},
         )
+
+
+def amp_history_messages(path: Path) -> Iterator[ThreadMessage]:
+    titles_by_thread: dict[str, str] = {}
+
+    for line_no, row in read_jsonl(path):
+        text = content_to_text(row.get("text"))
+        if not text:
+            continue
+
+        cwd = str(row.get("cwd") or "")
+        thread_id = amp_history_thread_id(cwd, path)
+        title = titles_by_thread.get(thread_id)
+        if not title:
+            title = Path(cwd).name if cwd else compact_text(text, limit=120)
+            titles_by_thread[thread_id] = title
+
+        yield ThreadMessage(
+            source="amp",
+            thread_id=thread_id,
+            message_id=f"{path.stem}:{line_no}",
+            path=path,
+            line=line_no,
+            timestamp=timestamp_text(row.get("timestamp")),
+            role="user",
+            cwd=cwd,
+            title=title,
+            text=text,
+            metadata={"row_type": "history"},
+        )
+
+
+def amp_history_thread_id(cwd: str, path: Path) -> str:
+    seed = cwd or str(path)
+    digest = sha1(seed.encode("utf-8", errors="replace")).hexdigest()[:12]
+    return f"history-{digest}"
 
 
 def custom_jsonl_messages(path: Path, source: str = "custom") -> Iterator[ThreadMessage]:

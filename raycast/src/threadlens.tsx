@@ -350,6 +350,7 @@ function sourceLabel(source: string): string {
     cursor: "Cursor",
     pi: "Pi",
     omp: "OMP",
+    amp: "Amp",
     droid: "Droid",
     opencode: "OpenCode",
   };
@@ -362,7 +363,8 @@ function sourceIcon(source: string) {
     claude: "agents/claude.svg",
     cursor: "agents/cursor.svg",
     pi: "agents/pi.svg",
-    omp: "agents/amp.svg",
+    amp: "agents/amp.svg",
+    omp: Icon.Terminal,
     droid: "agents/droid.svg",
     opencode: {
       light: "agents/opencode.svg",

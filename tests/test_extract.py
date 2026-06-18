@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from threadlens.extract import agent_jsonl_messages, claude_messages, codex_messages, content_to_text, flatten_text
+from threadlens.extract import amp_history_messages, agent_jsonl_messages, claude_messages, codex_messages, content_to_text, flatten_text
 from threadlens.models import ThreadMessage
 from threadlens.profiles import SourceProfile, load_profiles, save_profiles
 from threadlens.sources import cursor_messages, opencode_messages, source_paths, source_profile_messages, source_profile_paths
@@ -130,6 +130,26 @@ class ExtractTests(unittest.TestCase):
         self.assertEqual(messages[0].thread_id, "droid-session")
         self.assertEqual(messages[0].title, "Droid Launch")
         self.assertEqual(messages[0].text, "public droid answer")
+
+    def test_amp_history_messages_indexes_prompt_history_by_cwd(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "history.jsonl"
+            rows = [
+                {"text": "first amp prompt", "cwd": "/tmp/amp-project"},
+                {"text": "second amp prompt", "cwd": "/tmp/amp-project"},
+                {"text": "", "cwd": "/tmp/amp-project"},
+            ]
+            path.write_text("\n".join(json.dumps(row) for row in rows), encoding="utf-8")
+
+            messages = list(amp_history_messages(path))
+
+        self.assertEqual(len(messages), 2)
+        self.assertEqual(messages[0].source, "amp")
+        self.assertEqual(messages[0].role, "user")
+        self.assertEqual(messages[0].cwd, "/tmp/amp-project")
+        self.assertEqual(messages[0].title, "amp-project")
+        self.assertEqual(messages[0].thread_id, messages[1].thread_id)
+        self.assertEqual(messages[0].text, "first amp prompt")
 
     def test_cursor_messages_skip_internal_agent_blobs(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -259,6 +279,17 @@ class ExtractTests(unittest.TestCase):
             paths = source_paths("opencode", home=home)
 
         self.assertEqual(paths, [db])
+
+    def test_amp_source_paths_detects_history_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            history = home / ".local" / "share" / "amp" / "history.jsonl"
+            history.parent.mkdir(parents=True)
+            history.write_text(json.dumps({"text": "amp prompt", "cwd": "/tmp/amp"}) + "\n", encoding="utf-8")
+
+            paths = source_paths("amp", home=home)
+
+        self.assertEqual(paths, [history])
 
     def test_store_search(self):
         with tempfile.TemporaryDirectory() as tmp:

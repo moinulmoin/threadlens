@@ -53,8 +53,8 @@ make verify
 
 ## Initial Scope
 
-- In scope: local-only search, Codex JSONL, Claude Code JSONL, Cursor local SQLite records, Pi JSONL, Oh My Pi/OMP JSONL, Droid JSONL, OpenCode SQLite, custom JSONL source profiles.
-- Experimental: Cursor extraction quality depends on Cursor's local storage shape. OpenCode is supported when its local database contains sessions.
+- In scope: local-only search, Codex JSONL, Claude Code JSONL, Cursor local SQLite records, Pi JSONL, Oh My Pi/OMP JSONL, Amp Code prompt history, Droid JSONL, OpenCode SQLite, custom JSONL source profiles.
+- Experimental: Cursor extraction quality depends on Cursor's local storage shape. Amp Code is supported from local prompt history when `~/.local/share/amp/history.jsonl` exists. OpenCode is supported when its local database contains sessions.
 - Out of scope for v0: hosted sync, full app UI, embeddings, background daemon, team sharing.
 
 Cursor's storage format is less stable than the JSONL-backed agents. The adapter
@@ -70,8 +70,8 @@ threadlens start
 ```
 
 `start` discovers built-in sources, explains the local-only SQLite index, indexes
-Codex, Claude, Cursor, Pi, OMP, Droid, and OpenCode when local sessions exist,
-then prints commands to try next.
+Codex, Claude, Cursor, Pi, OMP, Amp Code, Droid, and OpenCode when local
+sessions or prompt history exist, then prints commands to try next.
 
 Search works as the main entrypoint too. If the index is empty, it runs first-time
 indexing before searching:
@@ -123,6 +123,7 @@ Current built-in source names:
 - `cursor`
 - `pi`
 - `omp`
+- `amp`
 - `droid`
 - `opencode`
 
@@ -238,6 +239,7 @@ threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp
 - Only user and assistant messages are indexed for Codex and Claude by default.
 - Tool output and system/developer instructions are skipped for Codex and Claude.
 - Pi, OMP, Droid, and OpenCode adapters index user/assistant text parts and skip thinking/tool blocks.
+- Amp Code indexes local prompt history from `~/.local/share/amp/history.jsonl`; the observed local store does not include assistant transcripts, timestamps, or resumable session ids.
 - Obvious credential fields are skipped in generic and Cursor extraction.
 - Search results are grouped by session and include source, timestamp, cwd, source path, line, snippets, and score.
 - Use `--cwd` to restrict search to sessions whose recorded cwd is that directory or a child directory.
@@ -252,6 +254,7 @@ Current resume hints:
 - OMP: `cd <cwd> && omp --resume <session_id>`
 - Droid: `cd <cwd> && droid --resume <session_id>`
 - OpenCode: `cd <cwd> && opencode --session <session_id>`
+- Amp Code: not emitted yet; the observed local history file does not expose resumable session ids
 - Cursor: not emitted yet; the local CLI did not expose a session resume command
 
 ## Raycast

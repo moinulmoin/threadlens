@@ -595,6 +595,11 @@ class CliTests(unittest.TestCase):
         self.assertIn("passed: True", stdout)
         self.assertIn("recall@5: 1/1 = 1.000", stdout)
 
+    def test_amp_does_not_emit_unverified_resume_command(self):
+        command = cli_module.resume_command_for("amp", "history-session", "/tmp/amp")
+
+        self.assertEqual(command, "")
+
 
 if __name__ == "__main__":
     unittest.main()
