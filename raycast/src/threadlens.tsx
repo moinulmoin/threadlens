@@ -2,6 +2,7 @@ import {
   Action,
   ActionPanel,
   Clipboard,
+  Color,
   Detail,
   Icon,
   List,
@@ -103,10 +104,13 @@ export default function Command() {
         <List.Item
           key={result.result_id}
           title={displayTitle(result)}
-          subtitle={compactPath(result.cwd)}
           accessories={[
             {
-              text: sourceLabel(result.source),
+              text: accessoryPath(result.cwd),
+              tooltip: result.cwd || "Directory",
+            },
+            {
+              text: sourceAccessoryText(result.source),
               icon: sourceIcon(result.source),
               tooltip: "Agent",
             },
@@ -322,6 +326,10 @@ function compactPath(value: string): string {
   return normalized;
 }
 
+function accessoryPath(value: string): string {
+  return truncateMiddle(compactPath(value), 46);
+}
+
 function lastPathPart(value: string): string {
   if (!value) {
     return "";
@@ -342,28 +350,60 @@ function sourceLabel(source: string): string {
   return labels[source] || source;
 }
 
+function sourceAccessoryText(source: string): { value: string; color: Color } {
+  return {
+    value: sourceLabel(source),
+    color: sourceLabelColor(source),
+  };
+}
+
+function sourceLabelColor(source: string): Color {
+  const colors: Record<string, Color> = {
+    codex: Color.Green,
+    claude: Color.Orange,
+    cursor: Color.Blue,
+    pi: Color.Purple,
+    omp: Color.Red,
+    droid: Color.Green,
+    opencode: Color.PrimaryText,
+  };
+  return colors[source] || Color.SecondaryText;
+}
+
 function sourceIcon(source: string) {
-  const icons: Record<string, string | { light: string; dark: string }> = {
+  const icons: Record<
+    string,
+    {
+      source: string | { light: string; dark: string };
+      tintColor?: Color.ColorLike;
+    }
+  > = {
     codex: {
-      light: "agents/codex.svg",
-      dark: "agents/codex-dark.svg",
+      source: "agents/codex.svg",
+      tintColor: "#10A37F",
     },
-    claude: "agents/claude.svg",
+    claude: { source: "agents/claude.svg" },
     cursor: {
-      light: "agents/cursor.svg",
-      dark: "agents/cursor-dark.svg",
+      source: "agents/cursor.svg",
     },
-    pi: "agents/pi.svg",
-    omp: "agents/amp.svg",
-    droid: "agents/droid.svg",
+    pi: { source: "agents/pi.svg" },
+    omp: { source: "agents/amp.svg" },
+    droid: { source: "agents/droid.svg" },
     opencode: {
-      light: "agents/opencode.svg",
-      dark: "agents/opencode-dark.svg",
+      source: {
+        light: "agents/opencode.svg",
+        dark: "agents/opencode-dark.svg",
+      },
     },
   };
+  const icon = icons[source];
+
+  if (!icon) {
+    return Icon.Terminal;
+  }
 
   return {
-    source: icons[source] || Icon.Terminal,
+    ...icon,
     fallback: Icon.Terminal,
   };
 }
