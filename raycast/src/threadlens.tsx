@@ -15,6 +15,8 @@ import { promisify } from "node:util";
 import { useEffect, useState } from "react";
 
 const execFileAsync = promisify(execFile);
+const TITLE_COLUMN_CHARS = 54;
+const PATH_COLUMN_CHARS = 36;
 
 type Preferences = {
   threadlensCommand: string;
@@ -329,11 +331,11 @@ function compactPath(value: string): string {
 }
 
 function accessoryPath(value: string): string {
-  return truncateMiddle(compactPath(value), 32);
+  return truncateMiddle(compactPath(value), PATH_COLUMN_CHARS);
 }
 
 function listTitle(result: ThreadlensResult): string {
-  return truncateMiddle(displayTitle(result), 52);
+  return truncateMiddle(displayTitle(result), TITLE_COLUMN_CHARS);
 }
 
 function lastPathPart(value: string): string {
@@ -359,12 +361,12 @@ function sourceLabel(source: string): string {
 
 function sourceIcon(source: string) {
   const icons: Record<string, string | { light: string; dark: string }> = {
-    codex: "agents/codex.svg",
+    codex: "agents/codex-badge.png",
     claude: "agents/claude.svg",
     cursor: "agents/cursor.svg",
     pi: "agents/pi.svg",
     amp: "agents/amp.svg",
-    omp: Icon.Terminal,
+    omp: "agents/omp.png",
     droid: "agents/droid.svg",
     opencode: {
       light: "agents/opencode.svg",
