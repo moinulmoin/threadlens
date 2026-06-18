@@ -1,7 +1,6 @@
 import {
   Action,
   ActionPanel,
-  Color,
   Clipboard,
   Detail,
   Icon,
@@ -103,7 +102,6 @@ export default function Command() {
       {results.map((result) => (
         <List.Item
           key={result.result_id}
-          icon={sourceIcon(result.source)}
           title={displayTitle(result)}
           subtitle={compactPath(result.cwd)}
           accessories={[
@@ -116,11 +114,6 @@ export default function Command() {
               text: formatDate(result.last_timestamp),
               icon: Icon.Calendar,
               tooltip: result.last_timestamp || "No timestamp",
-            },
-            {
-              text: String(Math.round(result.score)),
-              icon: Icon.BullsEye,
-              tooltip: "Score",
             },
           ]}
           actions={<ThreadlensActions result={result} />}
@@ -202,11 +195,6 @@ function SessionDetail({ result }: { result: ThreadlensResult }) {
             title="Last Activity"
             text={formatDateTime(result.last_timestamp)}
             icon={Icon.Calendar}
-          />
-          <Detail.Metadata.Label
-            title="Score"
-            text={String(Math.round(result.score))}
-            icon={Icon.BullsEye}
           />
           <Detail.Metadata.Separator />
           <Detail.Metadata.Label title="Result ID" text={result.result_id} />
@@ -356,19 +344,18 @@ function sourceLabel(source: string): string {
 }
 
 function sourceIcon(source: string) {
-  const colors: Record<string, Color> = {
-    codex: Color.Green,
-    claude: Color.Orange,
-    cursor: Color.Purple,
-    pi: Color.Blue,
-    omp: Color.Magenta,
-    droid: Color.Yellow,
-    opencode: Color.Red,
+  const icons: Record<string, string> = {
+    codex: "agents/codex.svg",
+    claude: "agents/claude.svg",
+    pi: "agents/pi.svg",
+    omp: "agents/amp.svg",
+    droid: "agents/droid.svg",
+    opencode: "agents/opencode.svg",
   };
 
   return {
-    source: Icon.Terminal,
-    tintColor: colors[source] || Color.SecondaryText,
+    source: icons[source] || Icon.Terminal,
+    fallback: Icon.Terminal,
   };
 }
 
