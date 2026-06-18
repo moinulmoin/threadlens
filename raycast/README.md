@@ -34,6 +34,16 @@ If Raycast shows `Missing executable`, remove the old imported Threadlens
 extension in Raycast, quit and reopen Raycast, then run `npm run dev` again from
 this directory.
 
+If Raycast shows `spawn threadlens ENOENT`, the extension could not find the CLI
+binary in Raycast's GUI environment. The extension automatically adds common
+install paths such as `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin`.
+If the error still appears, set the `Threadlens Command` preference to the full
+path from:
+
+```bash
+command -v threadlens
+```
+
 ## Checks
 
 ```bash

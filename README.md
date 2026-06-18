@@ -294,3 +294,8 @@ NPM_CONFIG_CACHE=/private/tmp/threadlens-npm-cache npm --prefix raycast run lint
 If Raycast shows `Missing executable`, remove the old imported extension from
 Raycast, quit and reopen Raycast, then run `npm run dev` again from `raycast/`.
 That error usually means Raycast is loading a stale imported command bundle.
+
+If Raycast shows `spawn threadlens ENOENT`, set the `Threadlens Command`
+preference to the full path from `command -v threadlens`. The extension already
+adds common CLI install paths such as `~/.local/bin`, `/opt/homebrew/bin`, and
+`/usr/local/bin` before spawning the CLI.

@@ -8,6 +8,7 @@ import {
   getPreferenceValues,
 } from "@raycast/api";
 import { execFile } from "node:child_process";
+import { homedir } from "node:os";
 import { promisify } from "node:util";
 import { useEffect, useState } from "react";
 
@@ -188,12 +189,46 @@ async function runThreadlens(args: string[], signal?: AbortSignal) {
   const preferences = getPreferenceValues<Preferences>();
   const command = preferences.threadlensCommand || "threadlens";
   const baseArgs = splitArgs(preferences.threadlensArgs || "");
-  return execFileAsync(command, [...baseArgs, ...args], {
-    cwd: preferences.threadlensCwd || undefined,
-    signal,
-    timeout: 10_000,
-    maxBuffer: 1024 * 1024 * 4,
-  });
+  try {
+    return await execFileAsync(command, [...baseArgs, ...args], {
+      cwd: preferences.threadlensCwd || undefined,
+      env: {
+        ...process.env,
+        PATH: commandSearchPath(),
+      },
+      signal,
+      timeout: 10_000,
+      maxBuffer: 1024 * 1024 * 4,
+    });
+  } catch (error) {
+    if (isExecutableMissing(error)) {
+      throw new Error(
+        `Could not find ${command}. Install the CLI with "uv tool install --reinstall ." or set Threadlens Command to the full path.`,
+      );
+    }
+    throw error;
+  }
+}
+
+function commandSearchPath(): string {
+  return [
+    `${homedir()}/.local/bin`,
+    `${homedir()}/bin`,
+    `${homedir()}/.cargo/bin`,
+    "/opt/homebrew/bin",
+    "/usr/local/bin",
+    process.env.PATH || "",
+  ]
+    .filter(Boolean)
+    .join(":");
+}
+
+function isExecutableMissing(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    "code" in error &&
+    (error as NodeJS.ErrnoException).code === "ENOENT"
+  );
 }
 
 function splitArgs(value: string): string[] {
