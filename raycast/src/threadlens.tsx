@@ -135,18 +135,18 @@ function ThreadlensActions({
 }) {
   return (
     <ActionPanel>
-      {includeDetails ? (
-        <Action.Push
-          title="Open Details"
-          icon={Icon.Eye}
-          target={<SessionDetail result={result} />}
-        />
-      ) : null}
       {result.actions?.resume_command ? (
         <Action.CopyToClipboard
           title="Copy Resume Command"
           icon={Icon.Terminal}
           content={result.actions.resume_command}
+        />
+      ) : null}
+      {includeDetails ? (
+        <Action.Push
+          title="Open Details"
+          icon={Icon.Eye}
+          target={<SessionDetail result={result} />}
         />
       ) : null}
       <Action
