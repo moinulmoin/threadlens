@@ -1,0 +1,2 @@
+{"session":{"id":"demo-session"},"message":{"id":"m1","role":"user","content":"debug custom agent search profile"},"createdAt":"2026-06-17T00:00:00Z","cwd":"/tmp/demo","title":"demo custom agent"}
+{"session":{"id":"demo-session"},"message":{"id":"m2","role":"assistant","content":"custom source profile indexed successfully"},"createdAt":"2026-06-17T00:01:00Z","cwd":"/tmp/demo","title":"demo custom agent"}

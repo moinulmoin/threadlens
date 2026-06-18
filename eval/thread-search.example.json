@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "example_plunk_otp",
+    "target": {
+      "source": "claude",
+      "session_id": "replace-with-real-session-id"
+    },
+    "queries": [
+      "plunk otp",
+      "otp delivery",
+      "email verification",
+      "plnk otp",
+      "verify code email"
+    ],
+    "negative_queries": [
+      "monorepo split",
+      "rider modal"
+    ]
+  }
+]

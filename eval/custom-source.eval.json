@@ -1,0 +1,20 @@
+[
+  {
+    "case_id": "demo_custom_source_profile",
+    "target": {
+      "source": "demoagent",
+      "session_id": "demo-session"
+    },
+    "queries": [
+      "custom agent search profile",
+      "source profile indexed",
+      "debug custom agent",
+      "demo custom agent",
+      "indexed successfully"
+    ],
+    "negative_queries": [
+      "monorepo api split",
+      "plunk otp"
+    ]
+  }
+]

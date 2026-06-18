@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile Python
+        run: python -B -m py_compile threadlens/*.py
+      - name: Run unit tests
+        run: python -B -m unittest discover -s tests
+      - name: Run custom source smoke eval
+        run: |
+          python -B -m threadlens \
+            --db "$RUNNER_TEMP/threadlens-smoke.sqlite" \
+            --config "$RUNNER_TEMP/threadlens-sources.json" \
+            sources add demoagent \
+            --path eval/custom-source.example.jsonl \
+            --session-key session.id \
+            --message-key message.id \
+            --role-key message.role \
+            --text-key message.content \
+            --timestamp-key createdAt \
+            --cwd-key cwd \
+            --title-key title \
+            --resume-template "cd {cwd} && demoagent resume {session_id}"
+          python -B -m threadlens \
+            --db "$RUNNER_TEMP/threadlens-smoke.sqlite" \
+            --config "$RUNNER_TEMP/threadlens-sources.json" \
+            refresh --source demoagent --force
+          python -B -m threadlens \
+            --db "$RUNNER_TEMP/threadlens-smoke.sqlite" \
+            --config "$RUNNER_TEMP/threadlens-sources.json" \
+            eval eval/custom-source.eval.json
+
+  raycast:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: raycast
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: raycast/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc --noEmit
+      - name: Lint
+        run: npm run lint
+      - name: Audit dependencies
+        run: npm audit --audit-level=high

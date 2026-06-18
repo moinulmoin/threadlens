@@ -1,0 +1,6 @@
+.threadlens/
+__pycache__/
+*.pyc
+build/
+*.egg-info/
+raycast/node_modules/
