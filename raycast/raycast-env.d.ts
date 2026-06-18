@@ -20,12 +20,12 @@ type ExtensionPreferences = {
 declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
-  /** Preferences accessible in the `search-threadlens` command */
-  export type SearchThreadlens = ExtensionPreferences & {}
+  /** Preferences accessible in the `threadlens` command */
+  export type Threadlens = ExtensionPreferences & {}
 }
 
 declare namespace Arguments {
-  /** Arguments passed to the `search-threadlens` command */
-  export type SearchThreadlens = {}
+  /** Arguments passed to the `threadlens` command */
+  export type Threadlens = {}
 }
 

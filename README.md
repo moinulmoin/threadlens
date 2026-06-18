@@ -244,10 +244,18 @@ With the CLI installed, configure extension preferences as:
 Verified locally:
 
 ```bash
-cd raycast
+cd /Users/moinulmoin/Documents/help-shadcn/raycast
 npm install
-npx tsc --noEmit
-npm audit
+npm run dev
+```
+
+Then open Raycast and run `Search Agent Sessions`.
+
+To install it from source instead of only running the dev process, use Raycast's
+`Import Extension` command and select:
+
+```text
+/Users/moinulmoin/Documents/help-shadcn/raycast
 ```
 
 From the repo root, the same TypeScript check is:

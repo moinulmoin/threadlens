@@ -11,7 +11,7 @@
   "license": "MIT",
   "commands": [
     {
-      "name": "search-threadlens",
+      "name": "threadlens",
       "title": "Search Agent Sessions",
       "description": "Search local coding-agent sessions with Threadlens.",
       "icon": "icon.png",
