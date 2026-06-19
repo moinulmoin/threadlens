@@ -612,7 +612,7 @@ def cmd_search(args: argparse.Namespace) -> int:
     store = ThreadStore(args.db)
     try:
         if args.fresh:
-            fresh_sources = [args.source] if args.source else list(DEFAULT_SOURCE_NAMES)
+            fresh_sources = [args.source] if args.source else list(DEFAULT_SOURCE_NAMES) + sorted(profiles)
             print(f"Refreshing {len(fresh_sources)} source(s) before search...", file=sys.stderr)
             refresh_store(store, fresh_sources, profiles, home=args.home, limit_files=None, force=False, days=None, include_paths=[])
             store.mark_sources_checked(fresh_sources, now_utc_iso())

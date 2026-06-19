@@ -693,5 +693,63 @@ class FreshnessUpgradeFromOldDbTests(unittest.TestCase):
             finally:
                 store.close()
 
+class FreshnessFreshCustomSourceTests(unittest.TestCase):
+    """`search --fresh` without --source must refresh custom profile sources too,
+    since an unfiltered search returns them (else custom results go stale)."""
+
+    def test_fresh_unfiltered_refreshes_custom_profile(self):
+        from threadlens.profiles import SourceProfile, save_profiles
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            home = root / "home"
+            home.mkdir()
+            custom = root / "aider.jsonl"
+            custom.write_text(
+                json.dumps({
+                    "session": {"id": "s1"},
+                    "message": {"id": "m1", "role": "user", "content": "xenon custom freshness phrase"},
+                    "createdAt": "2026-06-17T00:00:00Z",
+                    "cwd": "/tmp/custom",
+                    "title": "custom run",
+                }) + "\n",
+                encoding="utf-8",
+            )
+            config = root / "sources.json"
+            save_profiles(
+                {"aider": SourceProfile(
+                    name="aider",
+                    paths=[str(custom)],
+                    session_key="session.id",
+                    message_key="message.id",
+                    role_key="message.role",
+                    text_key="message.content",
+                    timestamp_key="createdAt",
+                    cwd_key="cwd",
+                    title_key="title",
+                )},
+                config,
+            )
+            db = root / "index.sqlite"
+
+            # Unfiltered --fresh on an empty index must refresh the custom profile,
+            # not just DEFAULT_SOURCE_NAMES.
+            code, stdout, stderr = _run_cli(
+                ["--db", str(db), "--config", str(config), "search",
+                 "--fresh", "--home", str(home), "xenon custom freshness"]
+            )
+            self.assertEqual(code, 0, f"stdout={stdout!r} stderr={stderr!r}")
+
+            store = ThreadStore(db)
+            try:
+                indexed = store.conn.execute(
+                    "select count(*) from messages where source = 'aider'"
+                ).fetchone()[0]
+                fr = store.source_freshness(["aider"])
+            finally:
+                store.close()
+            self.assertGreaterEqual(indexed, 1, "custom profile must be indexed by unfiltered --fresh")
+            self.assertTrue(fr["known"], "custom profile must be marked checked by --fresh")
+            self.assertIsNotNone(fr["per_source"]["aider"])
+
 if __name__ == "__main__":
     unittest.main()
