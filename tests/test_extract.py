@@ -218,6 +218,37 @@ class ExtractTests(unittest.TestCase):
         self.assertEqual(messages[0].thread_id, "session-1")
         self.assertEqual(messages[0].text, "real cursor user message")
 
+    def test_cursor_messages_item_table_branch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "state.vscdb"
+            conn = sqlite3.connect(path)
+            try:
+                conn.execute("create table ItemTable (key text, value text)")
+                conn.execute(
+                    "insert into ItemTable (key, value) values (?, ?)",
+                    (
+                        "composerData:composer-abc",
+                        json.dumps({
+                            "composerId": "composer-abc",
+                            "text": "help me refactor this",
+                            "createdAt": "2026-06-19T10:00:00Z",
+                            "trackedGitRepos": [{"path": "/home/user/project"}],
+                        }),
+                    ),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+            messages = list(cursor_messages(path))
+
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].source, "cursor")
+        self.assertEqual(messages[0].thread_id, "composer-abc")
+        self.assertEqual(messages[0].message_id, "composerData:composer-abc")
+        self.assertEqual(messages[0].cwd, "/home/user/project")
+        self.assertIn("refactor", messages[0].text)
+
     def test_opencode_messages_reads_text_parts(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "opencode.db"
@@ -255,6 +286,44 @@ class ExtractTests(unittest.TestCase):
         self.assertEqual(messages[0].cwd, "/tmp/open")
         self.assertEqual(messages[0].title, "OpenCode Run")
         self.assertEqual(messages[0].text, "opencode search text")
+
+    def test_opencode_messages_message_only_path(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "opencode.db"
+            conn = sqlite3.connect(path)
+            try:
+                conn.execute("create table session (id text, directory text, path text, title text)")
+                conn.execute("create table message (id text, session_id text, time_created integer, data text)")
+                # no `part` table — forces opencode_message_rows branch
+                conn.execute(
+                    "insert into session (id, directory, path, title) values (?, ?, ?, ?)",
+                    ("ses-msg-only", "/tmp/msg-only", "", "Msg-Only Session"),
+                )
+                conn.execute(
+                    "insert into message (id, session_id, time_created, data) values (?, ?, ?, ?)",
+                    (
+                        "msg-only-1",
+                        "ses-msg-only",
+                        1760000001000,
+                        json.dumps({
+                            "role": "user",
+                            "text": "message only text content",
+                        }),
+                    ),
+                )
+                conn.commit()
+            finally:
+                conn.close()
+
+            messages = list(opencode_messages(path))
+
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].source, "opencode")
+        self.assertEqual(messages[0].thread_id, "ses-msg-only")
+        self.assertEqual(messages[0].message_id, "msg-only-1")
+        self.assertEqual(messages[0].cwd, "/tmp/msg-only")
+        self.assertEqual(messages[0].title, "Msg-Only Session")
+        self.assertIn("message only text content", messages[0].text)
 
     def test_opencode_source_paths_detects_nonempty_local_db(self):
         with tempfile.TemporaryDirectory() as tmp:
