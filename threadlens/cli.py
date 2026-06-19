@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
+import shutil
 import sqlite3
 import string
 import sys
+import tempfile
 import time
 import urllib.parse
 from collections import Counter
@@ -16,7 +19,7 @@ from typing import Any
 
 from . import __version__
 from .models import ThreadMessage
-from .paths import default_db_path
+from .paths import default_data_dir, default_db_path
 from .profiles import DEFAULT_CONFIG, ProfileConfigError, SourceProfile, load_profiles, save_profiles, validate_source_name
 from .sources import (
     DEFAULT_SOURCE_NAMES,
@@ -1375,9 +1378,56 @@ def cmd_stats(args: argparse.Namespace) -> int:
         store.close()
 
 
+def _copy_traversable(src, dest: Path) -> None:
+    """Recursively copy an importlib.resources Traversable tree onto dest.
+
+    Relies only on the Traversable protocol, so it works for any packaging
+    layout (source tree, wheel, zip/zipapp, or a PyInstaller bundle).
+    """
+    dest.mkdir(parents=True, exist_ok=True)
+    for entry in src.iterdir():
+        target = dest / entry.name
+        if entry.is_dir():
+            _copy_traversable(entry, target)
+        else:
+            target.write_bytes(entry.read_bytes())
+
+
+def ensure_skill_extracted(data_dir: Path | None = None) -> Path:
+    """Materialize the bundled skill into a stable, copyable on-disk path.
+
+    `importlib.resources` can resolve to a location that disappears after the
+    process exits (a zipapp, or a PyInstaller --onefile _MEIPASS temp dir), so
+    the path `skill` prints would be useless for copying files out of. Extract
+    the bundled skill into default_data_dir()/skills/threadlens once per version
+    and return that durable path; repeat calls are cheap and idempotent.
+    """
+    src = resources.files("threadlens").joinpath("skills", "threadlens")
+    skills_root = (data_dir or default_data_dir()) / "skills"
+    dest = skills_root / "threadlens"
+    marker = skills_root / ".threadlens-skill-version"
+    if dest.is_dir() and marker.is_file():
+        try:
+            if marker.read_text(encoding="utf-8").strip() == __version__:
+                return dest
+        except OSError:
+            pass
+    skills_root.mkdir(parents=True, exist_ok=True)
+    staging = Path(tempfile.mkdtemp(prefix=".skill-tmp-", dir=skills_root))
+    try:
+        _copy_traversable(src, staging / "threadlens")
+        if dest.exists():
+            shutil.rmtree(dest)
+        os.replace(staging / "threadlens", dest)
+    finally:
+        shutil.rmtree(staging, ignore_errors=True)
+    marker.write_text(__version__, encoding="utf-8")
+    return dest
+
+
 def cmd_skill(args: argparse.Namespace) -> int:
-    skill_path = resources.files("threadlens").joinpath("skills", "threadlens")
-    skill_md = skill_path.joinpath("SKILL.md")
+    skill_path = ensure_skill_extracted()
+    skill_md = skill_path / "SKILL.md"
     if args.json:
         print(
             json.dumps(

@@ -1,0 +1,22 @@
+{
+  "name": "@moinulmoin/threadlens-linux-x64-gnu",
+  "version": "1.0.1",
+  "description": "Pre-built threadlens binary for threadlens-linux-x64-gnu",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "files": [
+    "bin"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moinulmoin/threadlens.git"
+  }
+}

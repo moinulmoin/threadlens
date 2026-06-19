@@ -1,5 +1,8 @@
 name: Release
 
+# Final tag (e.g. v1.1.0) -> build + publish everywhere.
+# Pre-release tag (e.g. v1.1.0-rc.1) or manual dispatch -> build + smoke + archive only
+# (publish/release jobs are skipped). Use that as a full dry run before the real tag.
 on:
   push:
     tags:
@@ -10,14 +13,14 @@ permissions:
   contents: read
 
 jobs:
-  build:
+  build-python:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Build package
+      - name: Build sdist + wheel
         run: |
           python -m pip install --upgrade build
           python -m build
@@ -26,21 +29,167 @@ jobs:
           python -m pip install dist/*.whl
           threadlens --version
           threadlens skill --json
-      - name: Upload package artifacts
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: threadlens-python-dist
           path: dist/*
 
+  build-binaries:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            runner: macos-14
+          - target: darwin-x64
+            runner: macos-13
+          - target: linux-x64-gnu
+            runner: ubuntu-22.04 # oldest supported runner -> broadest glibc compatibility
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install PyInstaller + project
+        run: |
+          python -m pip install --upgrade pip pyinstaller
+          python -m pip install .
+      - name: Build onedir binary
+        run: pyinstaller packaging/threadlens.spec --distpath dist/bin --workpath build/pyi --noconfirm
+      - name: Smoke + latency
+        run: |
+          BIN="dist/bin/threadlens/threadlens"
+          "$BIN" --version
+          "$BIN" skill --json
+          python - "$BIN" <<'PY'
+          import subprocess, sys, time
+          binv = sys.argv[1]
+          ts = []
+          for _ in range(5):
+              t = time.perf_counter()
+              subprocess.run([binv, "--version"], capture_output=True)
+              ts.append((time.perf_counter() - t) * 1000)
+          ts.sort()
+          med = ts[len(ts) // 2]
+          print(f"::notice::{binv} --version cold-start median {med:.0f}ms")
+          # Loose catastrophe guard only; real budget is ~250ms but CI runners vary.
+          assert med < 2000, f"binary cold-start regression: {med:.0f}ms"
+          PY
+      - name: Stage onedir bundle under a top-level threadlens/ dir
+        run: |
+          mkdir -p "stage/threadlens"
+          cp -R dist/bin/threadlens/. "stage/threadlens/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: threadlens-binary-${{ matrix.target }}
+          path: stage/threadlens
+
+  package-release-assets:
+    needs: build-binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: threadlens-binary-*
+      - name: Determine version
+        id: ver
+        run: |
+          v="$(python3 -c "import re,pathlib;print(re.search(r'__version__\s*=\s*\"([^\"]+)\"', pathlib.Path('threadlens/__init__.py').read_text()).group(1))")"
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+      - name: Archive each platform + checksums
+        run: |
+          mkdir -p release
+          v="${{ steps.ver.outputs.version }}"
+          for d in artifacts/threadlens-binary-*; do
+            target="${d#artifacts/threadlens-binary-}"
+            work="stage/${target}/threadlens"
+            mkdir -p "$work"
+            cp -R "$d/." "$work/"
+            chmod +x "$work/threadlens" || true
+            tar -C "stage/${target}" -czf "release/threadlens-v${v}-${target}.tar.gz" threadlens
+          done
+          (cd release && shasum -a 256 *.tar.gz > SHA256SUMS)
+          ls -la release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: threadlens-release-archives
+          path: release/*
+
+  publish-npm-platforms:
+    needs: build-binaries
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # OIDC trusted-publishing provenance once publishers are configured
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm install -g npm@latest # OIDC trusted publishing needs npm >= 11.5.1
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: threadlens-binary-*
+      - name: Assemble + publish platform packages (skip if already published)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          node npm/scripts/sync.mjs
+          for target in darwin-arm64 darwin-x64 linux-x64-gnu; do
+            pkgdir="npm/platforms/threadlens-${target}"
+            rm -rf "$pkgdir/bin/threadlens"
+            mkdir -p "$pkgdir/bin/threadlens"
+            cp -R "artifacts/threadlens-binary-${target}/." "$pkgdir/bin/threadlens/"
+            chmod +x "$pkgdir/bin/threadlens/threadlens"
+            name="$(node -p "require('./$pkgdir/package.json').name")"
+            ver="$(node -p "require('./$pkgdir/package.json').version")"
+            if npm view "${name}@${ver}" version >/dev/null 2>&1; then
+              echo "${name}@${ver} already published, skipping"
+            else
+              (cd "$pkgdir" && npm publish --access public)
+            fi
+          done
+
+  publish-npm-main:
+    needs: publish-npm-platforms
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm install -g npm@latest
+      - name: Publish main package (skip if already published)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          node npm/scripts/sync.mjs
+          ver="$(node -p "require('./npm/package.json').version")"
+          if npm view "threadlens@${ver}" version >/dev/null 2>&1; then
+            echo "threadlens@${ver} already published, skipping"
+          else
+            (cd npm && npm publish --access public)
+          fi
+
   publish-pypi:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-python
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
     runs-on: ubuntu-latest
     permissions:
       id-token: write
     steps:
-      - name: Download built distribution
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: threadlens-python-dist
           path: dist
@@ -48,10 +197,8 @@ jobs:
         id: check
         run: |
           version="$(ls dist/*.whl | sed -E 's/.*threadlens-([0-9][^-]*)-.*/\1/')"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
           if curl -fsS "https://pypi.org/pypi/threadlens/$version/json" >/dev/null 2>&1; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "threadlens $version already on PyPI, skipping publish"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
@@ -59,50 +206,28 @@ jobs:
         if: steps.check.outputs.exists == 'false'
         uses: pypa/gh-action-pypi-publish@release/v1
 
-  publish-npm:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: npm
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          registry-url: "https://registry.npmjs.org"
-      - name: Publish to npm if version is new
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          node scripts/sync.mjs
-          version="$(node -p "require('./package.json').version")"
-          if npm view "threadlens@$version" version >/dev/null 2>&1; then
-            echo "threadlens@$version already on npm, skipping publish"
-          else
-            npm publish --access public
-          fi
-
   github-release:
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [build-python, package-release-assets]
+    if: startsWith(github.ref, 'refs/tags/v') && !contains(github.ref, '-')
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - name: Download built distribution
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: threadlens-python-dist
           path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: threadlens-release-archives
+          path: release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: dist/*
+          files: |
+            dist/*
+            release/*
 
   raycast:
     runs-on: macos-latest
@@ -116,7 +241,5 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: raycast/package-lock.json
-      - name: Install dependencies
-        run: npm ci
-      - name: Build Raycast extension
-        run: npm run build
+      - run: npm ci
+      - run: npm run build

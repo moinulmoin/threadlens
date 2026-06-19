@@ -34,21 +34,49 @@ class CliTests(unittest.TestCase):
         self.assertIn("threadlens 1.0.1", stdout.getvalue())
 
     def test_skill_command_prints_bundled_skill_path(self):
-        code, stdout, stderr = self.run_cli(["skill"])
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(cli_module, "default_data_dir", return_value=Path(d)):
+                code, stdout, stderr = self.run_cli(["skill"])
 
-        self.assertEqual(code, 0)
-        self.assertEqual(stderr, "")
-        self.assertIn("threadlens/skills/threadlens", stdout)
-        self.assertIn("SKILL.md", stdout)
+            self.assertEqual(code, 0)
+            self.assertEqual(stderr, "")
+            self.assertIn(str(Path(d) / "skills" / "threadlens"), stdout)
+            self.assertIn("SKILL.md", stdout)
 
     def test_skill_command_json(self):
-        code, stdout, stderr = self.run_cli(["skill", "--json"])
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(cli_module, "default_data_dir", return_value=Path(d)):
+                code, stdout, stderr = self.run_cli(["skill", "--json"])
 
-        self.assertEqual(code, 0)
-        self.assertEqual(stderr, "")
-        payload = json.loads(stdout)
-        self.assertEqual(payload["name"], "threadlens")
-        self.assertTrue(payload["skill_md"].endswith("SKILL.md"))
+            self.assertEqual(code, 0)
+            self.assertEqual(stderr, "")
+            payload = json.loads(stdout)
+            self.assertEqual(payload["name"], "threadlens")
+            self.assertEqual(payload["path"], str(Path(d) / "skills" / "threadlens"))
+            self.assertTrue(payload["skill_md"].endswith("SKILL.md"))
+            self.assertTrue(Path(payload["skill_md"]).is_file())
+
+    def test_skill_extraction_persists_and_is_idempotent(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = cli_module.ensure_skill_extracted(data_dir=Path(d))
+            self.assertTrue((dest / "SKILL.md").is_file())
+            self.assertTrue((dest / "agents").is_dir())
+            sentinel = dest / "SENTINEL"
+            sentinel.write_text("x", encoding="utf-8")
+            again = cli_module.ensure_skill_extracted(data_dir=Path(d))
+            self.assertEqual(again, dest)
+            self.assertTrue(sentinel.is_file())
+
+    def test_skill_extraction_refreshes_on_version_change(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = cli_module.ensure_skill_extracted(data_dir=Path(d))
+            sentinel = dest / "SENTINEL"
+            sentinel.write_text("x", encoding="utf-8")
+            marker = Path(d) / "skills" / ".threadlens-skill-version"
+            marker.write_text("0.0.0", encoding="utf-8")
+            cli_module.ensure_skill_extracted(data_dir=Path(d))
+            self.assertFalse(sentinel.is_file())
+            self.assertEqual(marker.read_text(encoding="utf-8").strip(), cli_module.__version__)
 
     def write_codex_session(self, home: Path, *, text: str = "alpha setup phrase") -> Path:
         session_dir = home / ".codex" / "sessions"

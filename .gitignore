@@ -9,5 +9,8 @@ raycast/node_modules/
 npm/node_modules/
 npm/vendor/
 npm/*.tgz
+npm/platforms/*/bin/threadlens/
 site/
 launch/video/
+uv.lock
+raycast/metadata/

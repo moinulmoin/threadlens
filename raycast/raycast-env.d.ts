@@ -8,7 +8,7 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
 type ExtensionPreferences = {
-  /** Threadlens Command - Installed Threadlens executable to run. */
+  /** Threadlens Command - Advanced: override the bundled CLI with a custom threadlens path. */
   "threadlensCommand": string,
   /** Threadlens Args - Optional args before the Threadlens subcommand. */
   "threadlensArgs": string,

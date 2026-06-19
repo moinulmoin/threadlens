@@ -1,0 +1,19 @@
+{
+  "name": "@moinulmoin/threadlens-darwin-x64",
+  "version": "1.0.1",
+  "description": "Pre-built threadlens binary for threadlens-darwin-x64",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/moinulmoin/threadlens.git"
+  }
+}

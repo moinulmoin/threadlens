@@ -6,14 +6,14 @@
     "threadlens": "bin/threadlens.js"
   },
   "files": [
-    "bin/",
-    "vendor/"
+    "bin"
   ],
   "engines": {
     "node": ">=16"
   },
   "scripts": {
-    "prepack": "node scripts/sync.mjs"
+    "sync": "node scripts/sync.mjs",
+    "prepare": "node scripts/sync.mjs"
   },
   "keywords": [
     "agents",
@@ -26,11 +26,6 @@
     "cursor"
   ],
   "license": "MIT",
-  "os": [
-    "darwin",
-    "linux",
-    "win32"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/moinulmoin/threadlens.git"
@@ -38,5 +33,10 @@
   "homepage": "https://github.com/moinulmoin/threadlens#readme",
   "bugs": {
     "url": "https://github.com/moinulmoin/threadlens/issues"
+  },
+  "optionalDependencies": {
+    "@moinulmoin/threadlens-darwin-arm64": "1.0.1",
+    "@moinulmoin/threadlens-darwin-x64": "1.0.1",
+    "@moinulmoin/threadlens-linux-x64-gnu": "1.0.1"
   }
 }

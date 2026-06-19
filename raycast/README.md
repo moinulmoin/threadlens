@@ -1,12 +1,40 @@
 # Threadlens Raycast Extension
 
-This extension is a thin UI over the Threadlens CLI.
+This extension bundles the Threadlens CLI binary — no separate install is needed.
 
-With the CLI installed, set preferences to:
+## Bundled binary layout
 
-- Threadlens Command: `threadlens`
-- Threadlens Args: empty
-- Working Directory: empty
+The build system populates `assets/bin/` before the extension is packaged:
+
+```
+raycast/assets/bin/
+  darwin-arm64/
+    threadlens/
+      threadlens          ← executable
+      _internal/          ← PyInstaller support files
+  darwin-x64/
+    threadlens/
+      threadlens
+      _internal/
+```
+
+At runtime the extension selects the correct binary from `environment.assetsPath`:
+
+- `arm64` → `assets/bin/darwin-arm64/threadlens/threadlens`
+- `x64`   → `assets/bin/darwin-x64/threadlens/threadlens`
+
+## Advanced: custom CLI path
+
+Leave the **Threadlens Command** preference blank to use the bundled binary.
+Set it to a full path (e.g. `/usr/local/bin/threadlens`) to override it.
+
+If the bundled binary is missing or not executable the extension shows a clear
+error with instructions to reinstall or point to a local install:
+
+```bash
+uv tool install threadlens   # recommended
+npm install -g threadlens
+```
 
 ## Test Locally
 
@@ -29,20 +57,6 @@ open Raycast's `Import Extension` command and select:
 
 After importing, search for `Search Agent Sessions` in Raycast's root search.
 If Raycast asks which command to import, choose `threadlens`.
-
-If Raycast shows `Missing executable`, remove the old imported Threadlens
-extension in Raycast, quit and reopen Raycast, then run `npm run dev` again from
-this directory.
-
-If Raycast shows `spawn threadlens ENOENT`, the extension could not find the CLI
-binary in Raycast's GUI environment. The extension automatically adds common
-install paths such as `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin`.
-If the error still appears, set the `Threadlens Command` preference to the full
-path from:
-
-```bash
-command -v threadlens
-```
 
 ## Checks
 

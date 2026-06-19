@@ -22,10 +22,10 @@
     {
       "name": "threadlensCommand",
       "title": "Threadlens Command",
-      "description": "Installed Threadlens executable to run.",
+      "description": "Advanced: override the bundled CLI with a custom threadlens path.",
       "type": "textfield",
-      "required": true,
-      "default": "threadlens"
+      "required": false,
+      "default": ""
     },
     {
       "name": "threadlensArgs",
