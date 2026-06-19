@@ -138,12 +138,13 @@ jobs:
             mkdir -p "$pkgdir/bin/threadlens"
             cp -R "artifacts/threadlens-binary-${target}/." "$pkgdir/bin/threadlens/"
             chmod +x "$pkgdir/bin/threadlens/threadlens"
-            name="$(node -p "require('./$pkgdir/package.json').name")"
-            ver="$(node -p "require('./$pkgdir/package.json').version")"
-            if npm view "${name}@${ver}" version >/dev/null 2>&1; then
-              echo "${name}@${ver} already published, skipping"
-            else
-              (cd "$pkgdir" && npm publish --access public)
+            set +e
+            out=$(cd "$pkgdir" && npm publish --access public 2>&1)
+            rc=$?
+            set -e
+            echo "$out"
+            if [ $rc -ne 0 ] && ! echo "$out" | grep -q "cannot publish over"; then
+              echo "publish failed for ${target}"; exit 1
             fi
           done
 
@@ -166,11 +167,13 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           node npm/scripts/sync.mjs
-          ver="$(node -p "require('./npm/package.json').version")"
-          if npm view "threadlens@${ver}" version >/dev/null 2>&1; then
-            echo "threadlens@${ver} already published, skipping"
-          else
-            (cd npm && npm publish --access public)
+          set +e
+          out=$(cd npm && npm publish --access public 2>&1)
+          rc=$?
+          set -e
+          echo "$out"
+          if [ $rc -ne 0 ] && ! echo "$out" | grep -q "cannot publish over"; then
+            echo "publish failed for threadlens main"; exit 1
           fi
 
   publish-pypi:
