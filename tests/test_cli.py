@@ -373,6 +373,117 @@ class CliTests(unittest.TestCase):
         self.assertEqual(stderr, "")
         self.assertIn("Resume template field is not supported: raw_cwd", stdout)
 
+    def test_sources_rejects_resume_template_with_index_access(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+
+            code, stdout, stderr = self.run_cli(
+                [
+                    "--db", str(db),
+                    "--config", str(config),
+                    "sources", "add", "agent",
+                    "--path", "agent.jsonl",
+                    "--resume-template", "agent resume {session_id[0]}",
+                ]
+            )
+
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertIn("session_id", stdout)
+
+    def test_sources_rejects_resume_template_with_attr_access(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+
+            code, stdout, stderr = self.run_cli(
+                [
+                    "--db", str(db),
+                    "--config", str(config),
+                    "sources", "add", "agent",
+                    "--path", "agent.jsonl",
+                    "--resume-template", "agent resume {session_id.foo}",
+                ]
+            )
+
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertIn("session_id", stdout)
+
+    def test_sources_rejects_resume_template_with_nested_field(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+
+            code, stdout, stderr = self.run_cli(
+                [
+                    "--db", str(db),
+                    "--config", str(config),
+                    "sources", "add", "agent",
+                    "--path", "agent.jsonl",
+                    "--resume-template", "agent resume {session_id:{session_id[999]}<20}",
+                ]
+            )
+
+        self.assertEqual(code, 1)
+        self.assertEqual(stderr, "")
+        self.assertIn("session_id", stdout)
+
+    def test_sources_accepts_valid_resume_template_bare_fields(self):
+        for template in [
+            "cd {cwd} && agent resume {session_id}",
+            "{source} --session {session_id}",
+            "{cwd}",
+        ]:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp)
+                config = root / "sources.json"
+                db = root / "index.sqlite"
+
+                code, stdout, stderr = self.run_cli(
+                    [
+                        "--db", str(db),
+                        "--config", str(config),
+                        "sources", "add", "agent",
+                        "--path", "agent.jsonl",
+                        "--resume-template", template,
+                    ]
+                )
+
+            self.assertEqual(code, 0, msg=f"template {template!r} should be accepted")
+
+    def test_resume_command_for_index_access_template_returns_empty(self):
+        from threadlens.profiles import SourceProfile
+
+        profile = SourceProfile(
+            name="agent",
+            paths=[],
+            resume_template="agent resume {session_id[999]}",
+        )
+        result = cli_module.resume_command_for(
+            "agent", "abc-session-id", "/tmp/work",
+            profiles={"agent": profile},
+        )
+        self.assertEqual(result, "")
+
+    def test_resume_command_for_attr_access_template_returns_empty(self):
+        from threadlens.profiles import SourceProfile
+
+        profile = SourceProfile(
+            name="agent",
+            paths=[],
+            resume_template="agent resume {session_id.bad}",
+        )
+        result = cli_module.resume_command_for(
+            "agent", "abc-session-id", "/tmp/work",
+            profiles={"agent": profile},
+        )
+        self.assertEqual(result, "")
+
     def test_refresh_reports_bad_file_and_indexes_remaining_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
