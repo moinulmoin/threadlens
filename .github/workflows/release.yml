@@ -41,28 +41,33 @@ jobs:
         include:
           - target: darwin-arm64
             runner: macos-15
+            uv_python: cpython-3.12-macos-aarch64
           - target: darwin-x64
-            runner: macos-13
+            runner: macos-15 # arm64 runner builds x86_64 under Rosetta (macos-13 Intel runners are unavailable)
+            uv_python: cpython-3.12-macos-x86_64
+            rosetta: true
           - target: linux-x64-gnu
             runner: ubuntu-22.04 # oldest supported runner -> broadest glibc compatibility
+            uv_python: cpython-3.12-linux-x86_64-gnu
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install PyInstaller + project
-        run: |
-          python -m pip install --upgrade pip pyinstaller
-          python -m pip install .
+      - uses: astral-sh/setup-uv@v5
+      - name: Install Rosetta (run the x86_64 binary on the arm64 runner)
+        if: matrix.rosetta
+        run: sudo softwareupdate --install-rosetta --agree-to-license
       - name: Build onedir binary
-        run: pyinstaller packaging/threadlens.spec --distpath dist/bin --workpath build/pyi --noconfirm
-      - name: Smoke + latency
+        run: |
+          uv venv --python ${{ matrix.uv_python }} .venv
+          uv pip install --python .venv/bin/python pyinstaller .
+          .venv/bin/pyinstaller packaging/threadlens.spec --distpath dist/bin --workpath build/pyi --noconfirm
+      - name: Smoke + arch + latency
         run: |
           BIN="dist/bin/threadlens/threadlens"
+          file "$BIN"
           "$BIN" --version
           "$BIN" skill --json
-          python - "$BIN" <<'PY'
+          .venv/bin/python - "$BIN" <<'PY'
           import subprocess, sys, time
           binv = sys.argv[1]
           ts = []
@@ -73,7 +78,6 @@ jobs:
           ts.sort()
           med = ts[len(ts) // 2]
           print(f"::notice::{binv} --version cold-start median {med:.0f}ms")
-          # Loose catastrophe guard only; real budget is ~250ms but CI runners vary.
           assert med < 2000, f"binary cold-start regression: {med:.0f}ms"
           PY
       - name: Stage onedir bundle under a top-level threadlens/ dir
