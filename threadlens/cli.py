@@ -11,6 +11,7 @@ import string
 import sys
 import tempfile
 import time
+from datetime import datetime, timezone
 import urllib.parse
 from collections import Counter
 from importlib import resources
@@ -38,6 +39,7 @@ from .store import ThreadStore
 
 DEFAULT_DB = default_db_path()
 RESUME_TEMPLATE_FIELDS = {"cwd", "session_id", "source"}
+STALE_AFTER_SECONDS = 86400
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -85,6 +87,7 @@ def main(argv: list[str] | None = None) -> int:
     search_parser.add_argument("--json", action="store_true", help="Emit JSON lines")
     search_parser.add_argument("--no-bootstrap", action="store_true", help="Do not auto-index when the search index is empty")
     search_parser.add_argument("--home", type=Path, default=Path.home(), help=argparse.SUPPRESS)
+    search_parser.add_argument("--fresh", action="store_true", help="Refresh the relevant sources before searching")
 
     doctor_parser = sub.add_parser("doctor", help="Check source stores and adapter readability")
     doctor_parser.add_argument("--home", type=Path, default=Path.home())
@@ -252,6 +255,7 @@ def cmd_refresh(args: argparse.Namespace) -> int:
             print(f"Unknown source: {report['unknown_source']}")
             return 1
         print_refresh_report(report, args.db)
+        store.mark_sources_checked(selected_sources + (["custom"] if args.include else []), now_utc_iso())
         return 0
     finally:
         store.close()
@@ -299,6 +303,7 @@ def cmd_start(args: argparse.Namespace) -> int:
             print(f"Unknown source: {report['unknown_source']}")
             return 1
         print_refresh_report(report, args.db)
+        store.mark_sources_checked(selected_sources + (["custom"] if args.include else []), now_utc_iso())
         total_messages = store.message_count()
         stats_rows = [dict(row) for row in store.stats()]
     finally:
@@ -484,6 +489,22 @@ def start_readiness_report(
     }
 
 
+def now_utc_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def format_age(iso: str, now: datetime | None = None) -> str:
+    now = now or datetime.now(timezone.utc)
+    then = datetime.fromisoformat(iso)
+    if then.tzinfo is None:
+        then = then.replace(tzinfo=timezone.utc)
+    secs = max(0, int((now - then).total_seconds()))
+    if secs < 60: return "just now"
+    if secs < 3600: return f"{secs // 60}m ago"
+    if secs < 86400: return f"{secs // 3600}h ago"
+    return f"{secs // 86400}d ago"
+
+
 def load_profiles_for_cli(config_path: Path) -> dict[str, SourceProfile] | None:
     try:
         return load_profiles(config_path, strict=True)
@@ -590,6 +611,12 @@ def cmd_search(args: argparse.Namespace) -> int:
         return 1
     store = ThreadStore(args.db)
     try:
+        if args.fresh:
+            fresh_sources = [args.source] if args.source else list(DEFAULT_SOURCE_NAMES)
+            print(f"Refreshing {len(fresh_sources)} source(s) before search...", file=sys.stderr)
+            refresh_store(store, fresh_sources, profiles, home=args.home, limit_files=None, force=False, days=None, include_paths=[])
+            store.mark_sources_checked(fresh_sources, now_utc_iso())
+
         if search_needs_bootstrap(store, args.source):
             if args.no_bootstrap:
                 print(index_empty_message(args.source), file=sys.stderr)
@@ -611,6 +638,10 @@ def cmd_search(args: argparse.Namespace) -> int:
                 print(f"Unknown source: {report['unknown_source']}", file=sys.stderr)
                 return 1
             print_refresh_report(report, args.db, out=sys.stderr, err=sys.stderr)
+            store.mark_sources_checked(selected_sources, now_utc_iso())
+
+        freshness_sources = [args.source] if args.source else store.indexed_sources()
+        freshness = store.source_freshness(freshness_sources)
 
         try:
             results = store.search_sessions(
@@ -622,14 +653,38 @@ def cmd_search(args: argparse.Namespace) -> int:
         except sqlite3.Error as exc:
             print(f"Search failed: {exc}", file=sys.stderr)
             return 1
+
         if args.json:
+            oldest = freshness["oldest_checked_at"]
+            age_secs: int | None = None
+            if oldest:
+                then = datetime.fromisoformat(oldest)
+                if then.tzinfo is None:
+                    then = then.replace(tzinfo=timezone.utc)
+                age_secs = max(0, int((datetime.now(timezone.utc) - then).total_seconds()))
             for result in results:
                 payload = presentable_result(result, profiles)
+                payload["index_checked_at"] = oldest
+                payload["index_age_seconds"] = age_secs
                 print(json.dumps(payload, ensure_ascii=False))
             return 0
 
+        def print_freshness() -> None:
+            oldest = freshness["oldest_checked_at"]
+            if freshness["known"] and oldest:
+                print(f"\nindex: last checked {format_age(oldest)}")
+                then = datetime.fromisoformat(oldest)
+                if then.tzinfo is None:
+                    then = then.replace(tzinfo=timezone.utc)
+                secs = max(0, int((datetime.now(timezone.utc) - then).total_seconds()))
+                if secs > STALE_AFTER_SECONDS:
+                    print("  stale — run `threadlens refresh` (or `threadlens search --fresh ...`) to update")
+            else:
+                print("\nindex: freshness unknown — run `threadlens refresh`")
+
         if not results:
             print("No results.")
+            print_freshness()
             return 1
 
         for idx, result in enumerate(results, 1):
@@ -644,6 +699,7 @@ def cmd_search(args: argparse.Namespace) -> int:
                 print(f"    resume: {command}")
             for snippet in result["best_snippets"]:
                 print(f"    {snippet['role']} {snippet['timestamp']}: {snippet['snippet']}")
+        print_freshness()
         return 0
     finally:
         store.close()

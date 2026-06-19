@@ -174,7 +174,10 @@ threadlens search "plunk otp"
 threadlens search "monorepo api split" --source codex --limit 20
 threadlens search "plunk otp" --cwd /path/to/project
 threadlens search "plunk otp" --json
+threadlens search "plunk otp" --fresh
 ```
+
+Search shows how long ago the index was last checked and nudges you to `threadlens refresh` when it is over a day old; `--fresh` refreshes the relevant sources first.
 
 Inspect available sources:
 

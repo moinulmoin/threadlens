@@ -30,6 +30,12 @@ Threadlens searches local coding-agent sessions through one CLI. Use it as a ret
    threadlens search "raycast missing executable" --cwd /path/to/project
    ```
 
+   Search also reports how long ago the index was last checked and flags it when over a day old. Pass `--fresh` to refresh the relevant sources before searching:
+
+   ```bash
+   threadlens search "deploy script" --fresh
+   ```
+
 4. Inspect a promising result before making claims:
 
    ```bash
@@ -52,7 +58,7 @@ threadlens brief <result_id> --json
 threadlens doctor --json
 ```
 
-Search JSONL results include `result_id`, `source`, `session_id`, `cwd`, `title`, `last_timestamp`, snippets, `source_path`, `source_line`, and `actions.resume_command` when available.
+Search JSONL results include `result_id`, `source`, `session_id`, `cwd`, `title`, `last_timestamp`, snippets, `source_path`, `source_line`, `actions.resume_command` when available, and `index_checked_at` / `index_age_seconds` for the searched scope's freshness.
 
 ## Source Filters
 

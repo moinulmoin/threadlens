@@ -47,6 +47,11 @@ create virtual table if not exists messages_fts using fts5(
     content='messages',
     content_rowid='id'
 );
+
+create table if not exists source_refresh_state (
+    source text primary key,
+    last_checked_at text not null
+);
 """
 
 
@@ -108,6 +113,35 @@ class ThreadStore:
             """,
             (source, str(path), mtime_ns, size, message_count),
         )
+
+    def mark_sources_checked(self, sources: list[str], at: str) -> None:
+        for source in sources:
+            self.conn.execute(
+                "insert or replace into source_refresh_state(source, last_checked_at) values (?, ?)",
+                (source, at),
+            )
+        self.conn.commit()
+
+    def source_freshness(self, sources: list[str]) -> dict:
+        try:
+            rows_result = self.conn.execute(
+                "select source, last_checked_at from source_refresh_state"
+            ).fetchall()
+        except sqlite3.OperationalError as exc:
+            if "no such table" not in str(exc).lower():
+                raise
+            return {"known": False, "oldest_checked_at": None, "per_source": {s: None for s in sources}}
+        rows = {row[0]: row[1] for row in rows_result}
+        per = {s: rows.get(s) for s in sources}
+        known = len(sources) > 0 and all(v is not None for v in per.values())
+        oldest = min([v for v in per.values() if v], default=None)
+        return {"known": known, "oldest_checked_at": oldest, "per_source": per}
+
+    def indexed_sources(self) -> list[str]:
+        rows = self.conn.execute(
+            "select distinct source from messages order by source"
+        ).fetchall()
+        return [row[0] for row in rows]
 
     def add_messages(self, messages: list[ThreadMessage], *, rebuild: bool = True, commit: bool = True) -> int:
         if not messages:
