@@ -7,6 +7,8 @@
 [![Python](https://img.shields.io/pypi/pyversions/threadlens?logo=python&logoColor=white)](https://pypi.org/project/threadlens/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
+Built by [moinulmoin](https://moinulmoin.com) · [@moinulmoin](https://x.com/moinulmoin)
+
 **Find the coding-agent session you half-remember — without uploading your session history.**
 
 Threadlens is a local-first search tool for coding-agent sessions. It refreshes

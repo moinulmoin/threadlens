@@ -10,7 +10,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
-authors = [{ name = "Threadlens Contributors" }]
+authors = [{ name = "moinulmoin" }]
 keywords = ["agents", "cli", "search", "sqlite", "raycast"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -26,6 +26,7 @@ dependencies = []
 Homepage = "https://github.com/moinulmoin/threadlens"
 Repository = "https://github.com/moinulmoin/threadlens"
 Issues = "https://github.com/moinulmoin/threadlens/issues"
+Author = "https://moinulmoin.com"
 
 [project.scripts]
 threadlens = "threadlens.cli:main"

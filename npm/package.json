@@ -26,6 +26,10 @@
     "cursor"
   ],
   "license": "MIT",
+  "author": {
+    "name": "moinulmoin",
+    "url": "https://moinulmoin.com"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/moinulmoin/threadlens.git"
