@@ -12,3 +12,4 @@ npm/platforms/*/bin/threadlens/
 site/
 launch/
 uv.lock
+.wrangler/
