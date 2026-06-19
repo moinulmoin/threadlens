@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from threadlens import cli as cli_module
+from threadlens import __version__
 from threadlens.cli import main
 from threadlens.models import ThreadMessage
 from threadlens.profiles import SourceProfile, save_profiles
@@ -31,7 +32,7 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, 0)
         self.assertEqual(stderr.getvalue(), "")
-        self.assertIn("threadlens 1.1.0", stdout.getvalue())
+        self.assertIn(f"threadlens {__version__}", stdout.getvalue())
 
     def test_skill_command_prints_bundled_skill_path(self):
         with tempfile.TemporaryDirectory() as d:
