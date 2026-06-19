@@ -34,12 +34,6 @@ const PLATFORMS = [
     cpu:      ["arm64"],
   },
   {
-    name:     "@moinulmoin/threadlens-darwin-x64",
-    basename: "threadlens-darwin-x64",
-    os:       ["darwin"],
-    cpu:      ["x64"],
-  },
-  {
     name:     "@moinulmoin/threadlens-linux-x64-gnu",
     basename: "threadlens-linux-x64-gnu",
     os:       ["linux"],

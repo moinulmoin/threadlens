@@ -8,7 +8,6 @@ const path = require("node:path");
 /** Maps ${platform}-${arch} -> optional-dependency package name. */
 const PLATFORM_MAP = {
   "darwin-arm64": "@moinulmoin/threadlens-darwin-arm64",
-  "darwin-x64":   "@moinulmoin/threadlens-darwin-x64",
   "linux-x64":    "@moinulmoin/threadlens-linux-x64-gnu",
 };
 

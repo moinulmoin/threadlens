@@ -36,7 +36,6 @@
   },
   "optionalDependencies": {
     "@moinulmoin/threadlens-darwin-arm64": "1.1.0",
-    "@moinulmoin/threadlens-darwin-x64": "1.1.0",
     "@moinulmoin/threadlens-linux-x64-gnu": "1.1.0"
   }
 }

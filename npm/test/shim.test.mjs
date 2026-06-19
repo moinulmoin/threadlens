@@ -17,10 +17,9 @@ const { PLATFORM_MAP, resolveBinary } = require(join(npmRoot, "bin", "resolve.js
 
 // ── PLATFORM_MAP shape ────────────────────────────────────────────────────────
 
-test("PLATFORM_MAP contains exactly the 3 supported combos", () => {
+test("PLATFORM_MAP contains exactly the 2 supported combos", () => {
   assert.deepEqual(Object.keys(PLATFORM_MAP).sort(), [
     "darwin-arm64",
-    "darwin-x64",
     "linux-x64",
   ]);
 });
@@ -60,19 +59,12 @@ test("resolveBinary darwin-arm64 returns correct binary path", () => {
   assert.equal(resolved, join(fakeRoot, "bin", "threadlens", "threadlens"));
 });
 
-// darwin-x64
-test("resolveBinary darwin-x64 returns correct binary path", () => {
-  const pkg      = "@moinulmoin/threadlens-darwin-x64";
-  const fakeRoot = `/fake/node_modules/${pkg}`;
-
-  const resolved = resolveBinary({
-    platform: "darwin",
-    arch:     "x64",
-    env:      {},
-    resolver: fakeResolver(pkg, fakeRoot),
-  });
-
-  assert.equal(resolved, join(fakeRoot, "bin", "threadlens", "threadlens"));
+// darwin-x64 (Intel) is not a prebuilt target -> unsupported (use uvx/PyPI)
+test("resolveBinary throws UNSUPPORTED_PLATFORM for darwin-x64", () => {
+  assert.throws(
+    () => resolveBinary({ platform: "darwin", arch: "x64", env: {}, resolver: () => "" }),
+    (err) => err.code === "UNSUPPORTED_PLATFORM",
+  );
 });
 
 // linux-x64 → maps to linux-x64-gnu package
