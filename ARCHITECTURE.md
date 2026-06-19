@@ -21,7 +21,6 @@ disposable and can be rebuilt.
 - `tests/`: focused unit tests for extraction, ranking, CLI behavior, profiles.
 - `eval/`: public smoke fixtures and private-eval documentation.
 - `raycast/`: Raycast extension that calls `threadlens search --json`.
-- `launch/`: launch copy, positioning, demo script, and release checklist.
 
 ## Source Adapters
 

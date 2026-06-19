@@ -54,7 +54,6 @@ differs is *source discovery* (where it looks for each agent's local sessions):
 - [Contributing](CONTRIBUTING.md): local development, tests, and adapter rules.
 - [Security](SECURITY.md): local data boundary and session safety.
 - [Evaluation](eval/README.md): public smoke tests and private acceptance evals.
-- [Launch](launch/README.md): launch copy, checklist, and positioning.
 
 ## Install
 
