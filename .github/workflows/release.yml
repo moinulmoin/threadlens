@@ -132,7 +132,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           node npm/scripts/sync.mjs
-          for target in darwin-arm64 darwin-x64 linux-x64-gnu; do
+          for target in darwin-arm64 linux-x64-gnu; do
             pkgdir="npm/platforms/threadlens-${target}"
             rm -rf "$pkgdir/bin/threadlens"
             mkdir -p "$pkgdir/bin/threadlens"
