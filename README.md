@@ -85,7 +85,7 @@ npm install -g threadlens
 npx threadlens search "..."
 ```
 
-Prebuilt targets: macOS (Apple Silicon + Intel) and Linux x64 (glibc). On other
+Prebuilt targets: macOS Apple Silicon (arm64) and Linux x64 (glibc). On other
 platforms the shim points you back to the `uv` / `uvx` install above.
 
 ### Standalone binary
@@ -103,13 +103,22 @@ tar -xzf threadlens.tar.gz            # -> ./threadlens/ (keep the folder togeth
 sudo ln -sf "$PWD/threadlens/threadlens" /usr/local/bin/threadlens
 ```
 
-Archives are `threadlens-darwin-arm64`, `threadlens-darwin-x64`, and
-`threadlens-linux-x64-gnu`. Verify with `shasum -a 256 -c SHA256SUMS`.
+Archives are `threadlens-darwin-arm64` and `threadlens-linux-x64-gnu`.
+Verify with `shasum -a 256 -c SHA256SUMS`.
 
 ### Raycast
 
-Install the **Threadlens** extension from the Raycast store. It bundles the CLI,
-so there's nothing else to install — search your local sessions from Raycast.
+Install the **Threadlens** extension from the Raycast store. The extension
+requires the `threadlens` CLI on your `PATH` — install it first:
+
+```bash
+npm install -g threadlens
+# or with uv:
+uv tool install threadlens
+```
+
+If the CLI is installed elsewhere, set the full path in the **Threadlens
+Command** preference inside Raycast.
 
 ### From source
 
@@ -225,11 +234,12 @@ Reset and rebuild:
 threadlens refresh --reset
 ```
 
-Use another database path:
+Use another database path (`--db` and `--config` are global flags that must
+appear before the subcommand):
 
 ```bash
-threadlens refresh --db /tmp/threadlens.sqlite
-threadlens search "cursor composer" --db /tmp/threadlens.sqlite
+threadlens --db /tmp/threadlens.sqlite refresh
+threadlens --db /tmp/threadlens.sqlite search "cursor composer"
 ```
 
 Add custom JSONL roots:

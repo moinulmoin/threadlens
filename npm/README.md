@@ -23,7 +23,6 @@ Installing it pulls in the matching pre-built native binary via npm's
 | Platform | Package pulled |
 |---|---|
 | macOS arm64 | `@moinulmoin/threadlens-darwin-arm64` |
-| macOS x64   | `@moinulmoin/threadlens-darwin-x64`   |
 | Linux x64 (glibc) | `@moinulmoin/threadlens-linux-x64-gnu` |
 
 The binary is a self-contained [PyInstaller](https://pyinstaller.org/) onedir

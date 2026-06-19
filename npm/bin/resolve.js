@@ -45,7 +45,7 @@ function resolveBinary({ platform, arch, env, resolver } = {}) {
         [
           `threadlens: unsupported platform "${key}".`,
           "",
-          "Pre-built binaries are available for: darwin-arm64, darwin-x64, linux-x64.",
+          "Pre-built binaries are available for: darwin-arm64, linux-x64.",
           "Alternatives:",
           "  uv tool install threadlens       # installs from PyPI (brings its own Python)",
           '  uvx threadlens search "..."      # one-shot, no install',
