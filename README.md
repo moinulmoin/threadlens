@@ -117,6 +117,28 @@ uv tool install .                 # or: uv tool install --reinstall .  after cha
 make verify                       # run the project checks
 ```
 
+## Updating
+
+Update Threadlens with the same channel you installed from:
+
+```bash
+uv tool upgrade threadlens          # uv
+pipx upgrade threadlens             # pipx
+npm install -g threadlens@latest    # npm
+pip install -U threadlens           # pip
+```
+
+For one-off `uvx` / `npx` runs, pin the version so you skip a cached build:
+`uvx threadlens@latest ...` or `npx threadlens@latest ...`. For the standalone
+binary, re-download the latest archive from the
+[releases page](https://github.com/moinulmoin/threadlens/releases/latest). The
+Raycast extension auto-updates through the store.
+
+Your index survives updates. Releases that add new tables do so additively
+(`create table if not exists`) the first time the new version opens your cache,
+so existing search data is preserved with no re-index and no manual migration.
+Run `threadlens refresh --reset` if you ever want a clean rebuild.
+
 ## Initial Scope
 
 - In scope: local-only search, Codex JSONL, Claude Code JSONL, Cursor local SQLite records, Pi JSONL, Oh My Pi/OMP JSONL, Amp Code prompt history, Droid JSONL, OpenCode SQLite, custom JSONL source profiles.
