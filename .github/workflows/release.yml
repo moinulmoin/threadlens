@@ -40,7 +40,7 @@ jobs:
       matrix:
         include:
           - target: darwin-arm64
-            runner: macos-14
+            runner: macos-15
           - target: darwin-x64
             runner: macos-13
           - target: linux-x64-gnu
@@ -94,22 +94,16 @@ jobs:
         with:
           path: artifacts
           pattern: threadlens-binary-*
-      - name: Determine version
-        id: ver
-        run: |
-          v="$(python3 -c "import re,pathlib;print(re.search(r'__version__\s*=\s*\"([^\"]+)\"', pathlib.Path('threadlens/__init__.py').read_text()).group(1))")"
-          echo "version=$v" >> "$GITHUB_OUTPUT"
       - name: Archive each platform + checksums
         run: |
           mkdir -p release
-          v="${{ steps.ver.outputs.version }}"
           for d in artifacts/threadlens-binary-*; do
             target="${d#artifacts/threadlens-binary-}"
             work="stage/${target}/threadlens"
             mkdir -p "$work"
             cp -R "$d/." "$work/"
             chmod +x "$work/threadlens" || true
-            tar -C "stage/${target}" -czf "release/threadlens-v${v}-${target}.tar.gz" threadlens
+            tar -C "stage/${target}" -czf "release/threadlens-${target}.tar.gz" threadlens
           done
           (cd release && shasum -a 256 *.tar.gz > SHA256SUMS)
           ls -la release

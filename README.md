@@ -58,58 +58,62 @@ differs is *source discovery* (where it looks for each agent's local sessions):
 
 ## Install
 
-### Recommended: uv (or pipx)
+PyPI is the lean primary install; npm and the standalone binaries let you install
+without managing Python yourself.
+
+### uv / pipx (recommended)
 
 `uv` can fetch a compatible Python for you, so this is the most reliable path:
 
 ```bash
 uv tool install threadlens     # global install, on your PATH
-uvx threadlens search "..."    # run without installing
+uvx threadlens search "..."    # run once, without installing
 ```
 
-Prefer pipx? `pipx install threadlens` works the same way.
+`pipx install threadlens` works the same way.
 
-### npm
+### npm (no Python required)
 
-If you live in npm-land, the same CLI is published there. It runs the bundled
-Python source with your own interpreter, so it needs **Python 3.10+ on PATH**:
+The npm package selects a prebuilt native binary for your platform via npm's
+`optionalDependencies` — the same way esbuild ships its binary — so it needs **no
+Python**:
 
 ```bash
 npm install -g threadlens
-npx threadlens search "..."    # run without installing
+npx threadlens search "..."
 ```
+
+Prebuilt targets: macOS (Apple Silicon + Intel) and Linux x64 (glibc). On other
+platforms the shim points you back to the `uv` / `uvx` install above.
+
+### Standalone binary
+
+Every release attaches per-platform archives plus `SHA256SUMS` to the
+[GitHub releases](https://github.com/moinulmoin/threadlens/releases). For example,
+on Apple Silicon:
+
+```bash
+curl -fsSL -o threadlens.tar.gz \
+  https://github.com/moinulmoin/threadlens/releases/latest/download/threadlens-darwin-arm64.tar.gz
+tar -xzf threadlens.tar.gz            # -> ./threadlens/ (keep the folder together)
+./threadlens/threadlens --version
+# optional: symlink onto PATH (keep the extracted folder in place)
+sudo ln -sf "$PWD/threadlens/threadlens" /usr/local/bin/threadlens
+```
+
+Archives are `threadlens-darwin-arm64`, `threadlens-darwin-x64`, and
+`threadlens-linux-x64-gnu`. Verify with `shasum -a 256 -c SHA256SUMS`.
+
+### Raycast
+
+Install the **Threadlens** extension from the Raycast store. It bundles the CLI,
+so there's nothing else to install — search your local sessions from Raycast.
 
 ### From source
 
 ```bash
-uv tool install .
-```
-
-Then use the installed CLI:
-
-```bash
-threadlens start
-threadlens search "plunk otp"
-```
-
-If Threadlens is already installed from this checkout, refresh the installed
-tool after changes:
-
-```bash
-uv tool install --reinstall .
-```
-
-Verify the checkout:
-
-```bash
-make verify
-```
-
-Build release artifacts locally:
-
-```bash
-python3 -m pip install --upgrade build
-python3 -m build
+uv tool install .                 # or: uv tool install --reinstall .  after changes
+make verify                       # run the project checks
 ```
 
 ## Initial Scope
