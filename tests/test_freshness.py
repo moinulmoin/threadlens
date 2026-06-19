@@ -645,5 +645,53 @@ class FreshnessBootstrapMarkTests(unittest.TestCase):
         self.assertIn("index: last checked", stdout)
         self.assertNotIn("freshness unknown", stdout)
 
+class FreshnessUpgradeFromOldDbTests(unittest.TestCase):
+    """A pre-freshness (v1.1.x) DB opened under the current schema must gain
+    source_refresh_state automatically, without disturbing existing data."""
+
+    OLD_SCHEMA = (
+        "create table if not exists messages (id integer primary key, doc_key text not null unique, source text not null, thread_id text not null, message_id text not null, path text not null, line integer not null, timestamp text not null, role text not null, cwd text not null, title text not null, text text not null, metadata_json text not null);"
+        "create table if not exists indexed_files (source text not null, path text not null, mtime_ns integer not null, size integer not null, message_count integer not null, indexed_at text not null default current_timestamp, primary key (source, path));"
+        "create virtual table if not exists messages_fts using fts5(text, title, cwd, source, role, content='messages', content_rowid='id');"
+    )
+
+    def test_open_old_db_adds_table_and_preserves_data(self):
+        import sqlite3
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "old.sqlite"
+            # v1.1.x DB: old schema, one indexed message, NO source_refresh_state.
+            raw = sqlite3.connect(str(db))
+            raw.executescript(self.OLD_SCHEMA)
+            raw.execute(
+                "insert into messages (doc_key,source,thread_id,message_id,path,line,timestamp,role,cwd,title,text,metadata_json)"
+                " values (?,?,?,?,?,?,?,?,?,?,?,?)",
+                ("k1", "codex", "t1", "m1", "/p", 1, "2026-01-01T00:00:00Z", "user", "/cwd", "Billing", "plunk otp flow", "{}"),
+            )
+            raw.execute(
+                "insert into messages_fts (rowid,text,title,cwd,source,role)"
+                " select id,text,title,cwd,source,role from messages"
+            )
+            raw.commit()
+            before = {r[0] for r in raw.execute("select name from sqlite_master where type='table'").fetchall()}
+            raw.close()
+            self.assertNotIn("source_refresh_state", before)
+
+            # Open under the current schema -> simulates the v1.2.0 upgrade.
+            store = ThreadStore(db)
+            try:
+                after = {r[0] for r in store.conn.execute("select name from sqlite_master where type='table'").fetchall()}
+                self.assertIn("source_refresh_state", after)
+                self.assertEqual(store.conn.execute("select count(*) from messages").fetchone()[0], 1)
+                hit = store.conn.execute("select count(*) from messages_fts where messages_fts match 'plunk'").fetchone()[0]
+                self.assertEqual(hit, 1)
+                # The write that would raise "no such table" on an unmigrated DB now succeeds.
+                self.assertFalse(store.source_freshness(["codex"])["known"])
+                store.mark_sources_checked(["codex"], "2026-06-19T00:00:00+00:00")
+                fr = store.source_freshness(["codex"])
+                self.assertTrue(fr["known"])
+                self.assertEqual(fr["per_source"]["codex"], "2026-06-19T00:00:00+00:00")
+            finally:
+                store.close()
+
 if __name__ == "__main__":
     unittest.main()
