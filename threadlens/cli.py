@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shlex
 import shutil
 import sqlite3
@@ -623,7 +624,7 @@ def cmd_search(args: argparse.Namespace) -> int:
             return 1
         if args.json:
             for result in results:
-                payload = with_actions(result, profiles)
+                payload = presentable_result(result, profiles)
                 print(json.dumps(payload, ensure_ascii=False))
             return 0
 
@@ -632,8 +633,8 @@ def cmd_search(args: argparse.Namespace) -> int:
             return 1
 
         for idx, result in enumerate(results, 1):
-            result = with_actions(result, profiles)
-            print(f"[{idx}] {result['source']} {result['session_id']} score={result['score']}")
+            result = presentable_result(result, profiles)
+            print(f"[{idx}] {result['source']} {result['session_id']}")
             print(f"    title: {result['title'] or '-'}")
             print(f"    cwd: {result['cwd'] or '-'}")
             print(f"    last: {result['last_timestamp'] or '-'}")
@@ -672,6 +673,19 @@ def with_actions(result: dict[str, Any], profiles: dict[str, SourceProfile] | No
         actions["resume_command"] = command
     actions["open_source"] = f"{payload['source_path']}:{payload['source_line']}"
     payload["actions"] = actions
+    return payload
+
+
+def presentable_result(result: dict[str, Any], profiles: dict[str, SourceProfile] | None = None) -> dict[str, Any]:
+    payload = with_actions(result, profiles)
+    payload["title"] = sanitize_title(payload.get("title") or "")
+    payload["best_snippets"] = [
+        {**snippet, "snippet": redact_secrets(snippet.get("snippet") or "")}
+        for snippet in (payload.get("best_snippets") or [])
+    ]
+    payload["matched_terms"] = [
+        redact_secrets(term) for term in (payload.get("matched_terms") or [])
+    ]
     return payload
 
 
@@ -1287,16 +1301,16 @@ def build_brief(
     return {
         "source": source,
         "session_id": session_id,
-        "title": first.get("title") or "",
+        "title": sanitize_title(first.get("title") or ""),
         "cwd": cwd,
         "message_count": len(row_dicts),
         "first_timestamp": first.get("timestamp") or "",
         "last_timestamp": last.get("timestamp") or "",
         "source_path": first.get("path") or "",
         "resume_command": resume_command_for(source, session_id, cwd, profiles=profiles),
-        "first_user_message": compact_for_display(first_role_text(row_dicts, "user")),
-        "last_user_message": compact_for_display(last_role_text(row_dicts, "user")),
-        "last_assistant_message": compact_for_display(last_role_text(row_dicts, "assistant")),
+        "first_user_message": redact_secrets(compact_for_display(first_role_text(row_dicts, "user"))),
+        "last_user_message": redact_secrets(compact_for_display(last_role_text(row_dicts, "user"))),
+        "last_assistant_message": redact_secrets(compact_for_display(last_role_text(row_dicts, "assistant"))),
     }
 
 
@@ -1327,6 +1341,52 @@ def compact_for_display(text: str, limit: int = 320) -> str:
     if len(compact) <= limit:
         return compact
     return compact[:limit].rstrip() + "..."
+
+
+REDACTION = "\u2039redacted\u203a"
+
+_SECRET_PATTERNS = [
+    (re.compile(r"(?i)\bBearer\s+([A-Za-z0-9._~+/=-]{16,})\b"), f"Bearer {REDACTION}"),
+    (re.compile(r"\bsk-[A-Za-z0-9][A-Za-z0-9_-]{16,}\b"), REDACTION),
+    (re.compile(r"\bphc_[A-Za-z0-9_]{16,}\b"), REDACTION),
+    (re.compile(r"\bgh[pousr]_[A-Za-z0-9_]{20,255}\b"), REDACTION),
+    (re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b"), REDACTION),
+    (re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b"), REDACTION),
+    (re.compile(r"\bAIza[0-9A-Za-z_-]{30,}\b"), REDACTION),
+    (re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b"), REDACTION),
+    (re.compile(r"(?i)\b(api[_-]?key|token|secret|password)\s*[:=]\s*(['\"]?)[^\s,'\";]{8,}\2"), lambda m: f"{m.group(1)}={REDACTION}"),
+]
+
+_GENERIC_TOKEN_RE = re.compile(r"\b[A-Za-z0-9_-]{48,}\b")
+
+
+def _redact_generic(match: re.Match) -> str:
+    value = match.group(0)
+    if re.fullmatch(r"[0-9a-fA-F]+", value):
+        return value  # likely a hash/build id, not a secret
+    classes = sum([
+        any(c.islower() for c in value),
+        any(c.isupper() for c in value),
+        any(c.isdigit() for c in value),
+        any(c in "_-" for c in value),
+    ])
+    return REDACTION if classes >= 3 else value
+
+
+def redact_secrets(text: str) -> str:
+    value = text or ""
+    for pattern, repl in _SECRET_PATTERNS:
+        value = pattern.sub(repl, value)
+    value = _GENERIC_TOKEN_RE.sub(_redact_generic, value)
+    return value
+
+
+def sanitize_title(raw: str, limit: int = 80) -> str:
+    value = redact_secrets(raw or "")
+    value = " ".join(value.split())  # collapse whitespace
+    if len(value) <= limit:
+        return value
+    return value[: limit - 1].rstrip() + "\u2026"
 
 
 def rank_for_target(results: list[dict[str, Any]], source: str, session_id: str) -> int | None:

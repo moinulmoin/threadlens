@@ -646,5 +646,126 @@ class CliTests(unittest.TestCase):
         self.assertEqual(command, "")
 
 
+class RedactionIntegrationTests(unittest.TestCase):
+    """Integration tests: phc_-shaped token must not appear in any human or JSON output."""
+
+    _PHC_TOKEN = "phc_" + "S3cr3tP0sth0gTok3nAbCdEfGh"
+    _QUERY = "webhook-secret-session"
+    _SOURCE = "codex"
+    _SESSION_ID = "secret-session-001"
+    _RESULT_ID = "codex:secret-session-001"
+
+    def _seed_store(self, db: Path) -> None:
+        store = ThreadStore(db)
+        try:
+            store.add_messages(
+                [
+                    ThreadMessage(
+                        source=self._SOURCE,
+                        thread_id=self._SESSION_ID,
+                        message_id="msg-u1",
+                        path=db.parent / "thread.jsonl",
+                        line=1,
+                        timestamp="2026-06-17T00:01:00Z",
+                        role="user",
+                        cwd="/tmp/project",
+                        title=f"webhook-secret-session {self._PHC_TOKEN}",
+                        text=f"setup webhook-secret-session token={self._PHC_TOKEN}",
+                    ),
+                    ThreadMessage(
+                        source=self._SOURCE,
+                        thread_id=self._SESSION_ID,
+                        message_id="msg-a1",
+                        path=db.parent / "thread.jsonl",
+                        line=2,
+                        timestamp="2026-06-17T00:02:00Z",
+                        role="assistant",
+                        cwd="/tmp/project",
+                        title=f"webhook-secret-session {self._PHC_TOKEN}",
+                        text=f"Webhook configured. Auth: Bearer {self._PHC_TOKEN}",
+                    ),
+                ]
+            )
+        finally:
+            store.close()
+
+    def test_search_human_redacts_token_and_omits_score(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+            self._seed_store(db)
+
+            code, stdout, stderr = self.run_cli(
+                ["--db", str(db), "--config", str(config), "search", self._QUERY, "--no-bootstrap"]
+            )
+
+        self.assertEqual(code, 0, msg=stderr)
+        self.assertNotIn(self._PHC_TOKEN, stdout)
+        self.assertNotIn("score=", stdout)
+
+    def run_cli(self, argv):
+        import io
+        from contextlib import redirect_stderr, redirect_stdout
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with redirect_stdout(stdout), redirect_stderr(stderr):
+            code = cli_module.main(argv)
+        return code, stdout.getvalue(), stderr.getvalue()
+
+    def test_search_json_redacts_token_and_keeps_score(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+            self._seed_store(db)
+
+            code, stdout, stderr = self.run_cli(
+                ["--db", str(db), "--config", str(config), "search", self._QUERY, "--json", "--no-bootstrap"]
+            )
+
+        self.assertEqual(code, 0, msg=stderr)
+        lines = [l for l in stdout.strip().splitlines() if l]
+        self.assertTrue(lines, "Expected at least one JSON result")
+        result = json.loads(lines[0])
+        self.assertNotIn(self._PHC_TOKEN, result.get("title", ""))
+        self.assertIn("score", result)
+        # check snippets too
+        for snippet in result.get("best_snippets", []):
+            self.assertNotIn(self._PHC_TOKEN, snippet.get("snippet", ""))
+
+    def test_brief_human_redacts_token(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+            self._seed_store(db)
+
+            code, stdout, stderr = self.run_cli(
+                ["--db", str(db), "--config", str(config), "brief", self._RESULT_ID]
+            )
+
+        self.assertEqual(code, 0, msg=stderr)
+        self.assertNotIn(self._PHC_TOKEN, stdout)
+
+    def test_brief_json_redacts_token(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            config = root / "sources.json"
+            db = root / "index.sqlite"
+            self._seed_store(db)
+
+            code, stdout, stderr = self.run_cli(
+                ["--db", str(db), "--config", str(config), "brief", self._RESULT_ID, "--json"]
+            )
+
+        self.assertEqual(code, 0, msg=stderr)
+        brief = json.loads(stdout)
+        self.assertNotIn(self._PHC_TOKEN, brief.get("title", ""))
+        self.assertNotIn(self._PHC_TOKEN, brief.get("first_user_message", ""))
+        self.assertNotIn(self._PHC_TOKEN, brief.get("last_user_message", ""))
+        self.assertNotIn(self._PHC_TOKEN, brief.get("last_assistant_message", ""))
+
+
 if __name__ == "__main__":
     unittest.main()
