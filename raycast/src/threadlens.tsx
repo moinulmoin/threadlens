@@ -3,7 +3,6 @@ import {
   ActionPanel,
   Clipboard,
   Detail,
-  environment,
   Icon,
   List,
   showToast,
@@ -13,8 +12,6 @@ import {
 import { execFile } from "node:child_process";
 import { homedir } from "node:os";
 import { promisify } from "node:util";
-import { access } from "node:fs/promises";
-import { constants } from "node:fs";
 import { useEffect, useState } from "react";
 
 const execFileAsync = promisify(execFile);
@@ -454,7 +451,7 @@ async function copyBrief(resultId: string) {
 async function runThreadlens(args: string[], signal?: AbortSignal) {
   const preferences = getPreferenceValues<Preferences>();
   const override = preferences.threadlensCommand?.trim();
-  const command = override ? override : await resolveBundledBinary();
+  const command = override || "threadlens";
   const baseArgs = splitArgs(preferences.threadlensArgs || "");
   try {
     return await execFileAsync(command, [...baseArgs, ...args], {
@@ -470,35 +467,14 @@ async function runThreadlens(args: string[], signal?: AbortSignal) {
   } catch (error) {
     if (isExecutableMissing(error)) {
       throw new Error(
-        `Could not find ${command}. Set the "Threadlens Command" preference to the full path of the CLI, or reinstall the extension.`,
+        `Threadlens CLI not found. Install it (no Python needed):\n` +
+          `  npm install -g threadlens\n` +
+          `  uvx threadlens   (or: uv tool install threadlens)\n\n` +
+          `Already installed? Set its full path in the "Threadlens Command" preference.`,
       );
     }
     throw error;
   }
-}
-
-async function resolveBundledBinary(): Promise<string> {
-  const archMap: Record<string, string> = {
-    arm64: "darwin-arm64",
-    x64: "darwin-x64",
-  };
-  const archKey = archMap[process.arch];
-  if (!archKey) {
-    throw new Error(
-      `Unsupported architecture "${process.arch}". Set the "Threadlens Command" preference to the full path of a compatible binary.`,
-    );
-  }
-  const binPath = `${environment.assetsPath}/bin/${archKey}/threadlens/threadlens`;
-  try {
-    await access(binPath, constants.X_OK);
-  } catch {
-    throw new Error(
-      `Bundled Threadlens binary not found or not executable:\n  ${binPath}\n\n` +
-        `Reinstall the extension, or set the "Threadlens Command" preference to a local install:\n` +
-        `  uv tool install threadlens\n  npm install -g threadlens`,
-    );
-  }
-  return binPath;
 }
 
 function commandSearchPath(): string {

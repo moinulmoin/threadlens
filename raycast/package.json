@@ -22,7 +22,7 @@
     {
       "name": "threadlensCommand",
       "title": "Threadlens Command",
-      "description": "Advanced: override the bundled CLI with a custom threadlens path.",
+      "description": "Optional path to the threadlens CLI if it isn't on your PATH.",
       "type": "textfield",
       "required": false,
       "default": ""
