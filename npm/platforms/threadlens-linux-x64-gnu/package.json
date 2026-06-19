@@ -1,6 +1,6 @@
 {
   "name": "@moinulmoin/threadlens-linux-x64-gnu",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Pre-built threadlens binary for threadlens-linux-x64-gnu",
   "os": [
     "linux"

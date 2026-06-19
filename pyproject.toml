@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "threadlens"
-version = "1.2.0"
-description = "Local cross-harness search for agent threads"
+version = "1.2.1"
+description = "Local search for your coding-agent sessions across Codex, Claude Code, Cursor, and more."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
