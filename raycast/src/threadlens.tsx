@@ -92,7 +92,6 @@ export default function Command() {
       isLoading={isLoading}
       onSearchTextChange={setQuery}
       searchBarPlaceholder="Search local coding-agent sessions..."
-      throttle
     >
       {results.map((result) => (
         <List.Item
@@ -496,8 +495,8 @@ function isExecutableMissing(error: unknown): boolean {
 }
 
 function splitArgs(value: string): string[] {
-  const matches = value.match(/(?:[^\s"]+|"[^"]*")+/g) || [];
-  return matches.map((part) => part.replace(/^"|"$/g, ""));
+  const matches = value.match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g) || [];
+  return matches.map((part) => part.replace(/^["']|["']$/g, ""));
 }
 
 function parseThreadlensResults(stdout: string): ThreadlensResult[] {
