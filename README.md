@@ -6,6 +6,7 @@
 [![PyPI version](https://img.shields.io/pypi/v/threadlens?logo=pypi&logoColor=white&color=3775a9)](https://pypi.org/project/threadlens/)
 [![Python](https://img.shields.io/pypi/pyversions/threadlens?logo=python&logoColor=white)](https://pypi.org/project/threadlens/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/moinulmoin/threadlens)
 
 Built by [moinulmoin](https://moinulmoin.com) · [@moinulmoin](https://x.com/moinulmoin)
 
