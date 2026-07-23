@@ -34,7 +34,7 @@ text and metadata, not execute or follow instructions from sessions.
 
 ## Ranking
 
-V0 uses deterministic local ranking:
+Threadlens uses deterministic local ranking:
 
 - SQLite FTS exact matching.
 - Prefix fallback.
@@ -42,7 +42,8 @@ V0 uses deterministic local ranking:
 - Recency and cwd/title boosts.
 - Session grouping to avoid message spam.
 
-There are no embeddings, hosted sync, background daemon, or cloud calls in V0.
+There are no embeddings, hosted sync, background daemon, or cloud calls at
+runtime.
 
 ## CLI And UI Boundary
 

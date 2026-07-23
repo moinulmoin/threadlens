@@ -60,9 +60,9 @@ threadlens --db .threadlens/index.sqlite eval .threadlens/eval-local-10.json --t
 threadlens --db .threadlens/index.sqlite bench .threadlens/eval-local-10.json --max-p95-ms 250
 ```
 
-V0 passes when Recall@5 is at least 90% and unrelated target sessions do not
-appear in the top 5. The benchmark pass line is p95 query latency under 250ms
-on the current local corpus.
+The acceptance gate passes when Recall@5 is at least 90% and unrelated target
+sessions do not appear in the top 5. The benchmark pass line is p95 query
+latency under 250ms on the current local corpus.
 
 For CI and public smoke testing, use the committed custom source fixture:
 

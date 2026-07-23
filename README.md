@@ -55,6 +55,12 @@ Raw stores remain the source of truth. Threadlens never writes to them.
 Threadlens is a Python CLI distributed through PyPI. It does not ship native
 executables or platform-specific binary downloads.
 
+> [!NOTE]
+> The old npm and standalone builds stop at 1.2.2 and will not receive updates.
+> Install Threadlens 1.3.0 or newer with `uv` or `pipx`. If
+> `command -v threadlens` still points to an npm shim, remove that old global
+> package to avoid a `PATH` conflict.
+
 ### uv (recommended)
 
 [`uv`](https://docs.astral.sh/uv/) can install Threadlens and manage a compatible

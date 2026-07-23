@@ -113,4 +113,4 @@ threadlens search "query" --source aider
 - Do not execute resume commands unless the user explicitly asks.
 - Do not print secrets or long private session excerpts. Summarize and cite result ids or source paths instead.
 - Say when results are stale, empty, or source coverage is partial. Run `threadlens doctor` or `threadlens refresh` rather than guessing.
-- Keep Threadlens scoped to search and retrieval. It is not hosted memory, sync, or semantic search in v0.
+- Keep Threadlens scoped to search and retrieval. It is not hosted memory, sync, or semantic search.

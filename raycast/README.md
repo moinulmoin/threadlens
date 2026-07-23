@@ -16,6 +16,10 @@ pipx install threadlens
 
 The extension looks for `threadlens` on your `PATH` (including `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin`). If it's installed elsewhere, set the full path in the **Threadlens Command** preference.
 
+If you previously installed the discontinued npm build, confirm that
+`command -v threadlens` resolves to the `uv`/`pipx` installation rather than the
+old npm shim.
+
 ## Usage
 
 Open **Search Agent Sessions** and start typing. Results show the session title, agent, working directory, date, and relevance score. Press Enter on a result for snippets, metadata, and copy/open actions.

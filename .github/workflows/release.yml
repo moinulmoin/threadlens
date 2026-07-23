@@ -1,7 +1,7 @@
 name: Release
 
-# Final tag (e.g. v1.1.0) -> build + publish the Python CLI.
-# Pre-release tag (e.g. v1.1.0-rc.1) or manual dispatch -> build + smoke only
+# Final tag (e.g. v1.3.0) -> build + publish the Python CLI.
+# Pre-release tag (e.g. v1.3.0-rc.1) or manual dispatch -> build + smoke only
 # (publish/release jobs are skipped). Use that as a full dry run before the real tag.
 on:
   push:
