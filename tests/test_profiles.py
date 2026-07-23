@@ -56,6 +56,20 @@ class ProfileTests(unittest.TestCase):
             self.assertEqual((config.parent.stat().st_mode & 0o777), 0o700)
             self.assertEqual((config.stat().st_mode & 0o777), 0o600)
 
+    @unittest.skipUnless(os.name == "posix", "POSIX file modes only")
+    def test_custom_storage_path_does_not_chmod_existing_parent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            shared = Path(tmp) / "shared"
+            shared.mkdir(mode=0o755)
+            os.chmod(shared, 0o755)
+            db = shared / "index.sqlite"
+
+            store = ThreadStore(db)
+            store.close()
+
+            self.assertEqual((shared.stat().st_mode & 0o777), 0o755)
+            self.assertEqual((db.stat().st_mode & 0o777), 0o600)
+
 
 if __name__ == "__main__":
     unittest.main()

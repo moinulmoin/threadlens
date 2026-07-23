@@ -7,6 +7,14 @@ description: Local-first search workflow for coding-agent sessions with the Thre
 
 Threadlens searches local coding-agent sessions through one CLI. Use it as a retrieval layer before answering from memory when the user asks about previous local agent work, sessions, projects, commands, plans, bugs, or decisions.
 
+## Prerequisite
+
+Use the `threadlens` command installed on `PATH`. If it is unavailable, tell the
+user to install the Python CLI with `uv tool install threadlens` (recommended)
+or `pipx install threadlens`. Do not download or execute a standalone binary.
+The command `threadlens skill --json` reports the durable path of this bundled
+skill after installation.
+
 ## Core Workflow
 
 1. Check health first when the user asks about coverage, reliability, or missing results:

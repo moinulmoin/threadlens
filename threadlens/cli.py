@@ -118,7 +118,7 @@ def main(argv: list[str] | None = None) -> int:
     stats_parser = sub.add_parser("stats", help="Show index counts")
     stats_parser.set_defaults(_stats=True)
 
-    skill_parser = sub.add_parser("skill", help="Show the bundled Codex skill path")
+    skill_parser = sub.add_parser("skill", help="Show the bundled agent skill path")
     skill_parser.add_argument("--json", action="store_true", help="Emit JSON")
 
     args = parser.parse_args(argv)
@@ -1497,8 +1497,8 @@ def cmd_stats(args: argparse.Namespace) -> int:
 def _copy_traversable(src, dest: Path) -> None:
     """Recursively copy an importlib.resources Traversable tree onto dest.
 
-    Relies only on the Traversable protocol, so it works for any packaging
-    layout (source tree, wheel, zip/zipapp, or a PyInstaller bundle).
+    Relies only on the Traversable protocol, so it works for any Python
+    packaging layout (source tree, wheel, or zip/zipapp).
     """
     dest.mkdir(parents=True, exist_ok=True)
     for entry in src.iterdir():
@@ -1513,8 +1513,8 @@ def ensure_skill_extracted(data_dir: Path | None = None) -> Path:
     """Materialize the bundled skill into a stable, copyable on-disk path.
 
     `importlib.resources` can resolve to a location that disappears after the
-    process exits (a zipapp, or a PyInstaller --onefile _MEIPASS temp dir), so
-    the path `skill` prints would be useless for copying files out of. Extract
+    process exits (for example, a zipapp extraction directory), so the path
+    `skill` prints would be useless for copying files out of. Extract
     the bundled skill into default_data_dir()/skills/threadlens once per version
     and return that durable path; repeat calls are cheap and idempotent.
     """

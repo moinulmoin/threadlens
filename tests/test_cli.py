@@ -34,6 +34,15 @@ class CliTests(unittest.TestCase):
         self.assertEqual(stderr.getvalue(), "")
         self.assertIn(f"threadlens {__version__}", stdout.getvalue())
 
+    def test_help_describes_bundled_agent_skill(self):
+        stdout = io.StringIO()
+        with self.assertRaises(SystemExit) as raised:
+            with redirect_stdout(stdout):
+                main(["--help"])
+
+        self.assertEqual(raised.exception.code, 0)
+        self.assertIn("Show the bundled agent skill path", stdout.getvalue())
+
     def test_skill_command_prints_bundled_skill_path(self):
         with tempfile.TemporaryDirectory() as d:
             with patch.object(cli_module, "default_data_dir", return_value=Path(d)):
