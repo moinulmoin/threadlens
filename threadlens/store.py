@@ -52,6 +52,11 @@ create table if not exists source_refresh_state (
     source text primary key,
     last_checked_at text not null
 );
+
+create index if not exists idx_messages_source_path on messages(source, path);
+
+create index if not exists idx_messages_source_thread on messages(source, thread_id, timestamp, id);
+
 """
 
 

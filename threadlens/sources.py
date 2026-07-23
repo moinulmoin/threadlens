@@ -295,10 +295,6 @@ def cursor_messages(path: Path) -> Iterator[ThreadMessage]:
             row[0]
             for row in conn.execute("select name from sqlite_master where type = 'table'")
         }
-    except sqlite3.Error:
-        return
-
-    try:
         if "cursorDiskKV" not in tables and "ItemTable" not in tables:
             return
 

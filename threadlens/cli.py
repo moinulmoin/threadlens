@@ -777,7 +777,7 @@ def resume_command_for(
         }
         try:
             return profile.resume_template.format_map(values)
-        except (KeyError, ValueError):
+        except (KeyError, ValueError, IndexError, AttributeError, TypeError):
             return ""
     return ""
 
@@ -786,14 +786,22 @@ def validate_resume_template(template: str) -> None:
     if not template:
         return
     try:
-        fields = [field for _, field, _, _ in string.Formatter().parse(template) if field]
+        parsed = list(string.Formatter().parse(template))
     except ValueError as exc:
         raise ValueError(f"Invalid resume template: {exc}") from exc
-    for field in fields:
-        root = field.split(".", 1)[0].split("[", 1)[0]
-        if root not in RESUME_TEMPLATE_FIELDS:
-            allowed = ", ".join(sorted(RESUME_TEMPLATE_FIELDS))
-            raise ValueError(f"Resume template field is not supported: {root}. Use only: {allowed}")
+    for _, field, spec, _ in parsed:
+        if field:
+            root = field.split(".", 1)[0].split("[", 1)[0]
+            if root not in RESUME_TEMPLATE_FIELDS:
+                allowed = ", ".join(sorted(RESUME_TEMPLATE_FIELDS))
+                raise ValueError(f"Resume template field is not supported: {root}. Use only: {allowed}")
+            if field != root:
+                raise ValueError(
+                    f"Resume template field '{root}' must not use attribute or index access."
+                    f" Write {{{root}}} instead of {{{field}}}."
+                )
+        if spec:
+            validate_resume_template(spec)
 
 
 def parse_result_id(result_id: str, source: str | None = None) -> tuple[str | None, str]:
