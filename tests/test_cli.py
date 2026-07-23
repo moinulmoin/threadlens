@@ -1,5 +1,6 @@
 import json
 import io
+import re
 import sqlite3
 import tempfile
 import unittest
@@ -33,6 +34,22 @@ class CliTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, 0)
         self.assertEqual(stderr.getvalue(), "")
         self.assertIn(f"threadlens {__version__}", stdout.getvalue())
+
+    def test_package_metadata_version_matches_runtime(self):
+        pyproject = Path("pyproject.toml").read_text(encoding="utf-8")
+        match = re.search(r'^version = "([^"]+)"$', pyproject, re.MULTILINE)
+
+        self.assertIsNotNone(match)
+        self.assertEqual(match.group(1), __version__)
+
+    def test_help_describes_bundled_agent_skill(self):
+        stdout = io.StringIO()
+        with self.assertRaises(SystemExit) as raised:
+            with redirect_stdout(stdout):
+                main(["--help"])
+
+        self.assertEqual(raised.exception.code, 0)
+        self.assertIn("Show the bundled agent skill path", stdout.getvalue())
 
     def test_skill_command_prints_bundled_skill_path(self):
         with tempfile.TemporaryDirectory() as d:

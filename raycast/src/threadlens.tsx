@@ -463,9 +463,9 @@ async function runThreadlens(args: string[], signal?: AbortSignal) {
   } catch (error) {
     if (isExecutableMissing(error)) {
       throw new Error(
-        `Threadlens CLI not found. Install it (no Python needed):\n` +
-          `  npm install -g threadlens\n` +
-          `  uvx threadlens   (or: uv tool install threadlens)\n\n` +
+        `Threadlens CLI not found. Install it with:\n` +
+          `  uv tool install threadlens\n` +
+          `  (or: pipx install threadlens)\n\n` +
           `Already installed? Set its full path in the "Threadlens Command" preference.`,
       );
     }
@@ -537,7 +537,11 @@ function markdownCode(value: string): string {
 }
 
 function codeBlock(value: string): string {
-  const fence = value.includes("```") ? "````" : "```";
+  const longestRun = Math.max(
+    0,
+    ...(value.match(/`+/g) || []).map((run) => run.length),
+  );
+  const fence = "`".repeat(Math.max(3, longestRun + 1));
   return `${fence}text\n${value}\n${fence}`;
 }
 

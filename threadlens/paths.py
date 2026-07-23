@@ -66,8 +66,9 @@ def default_config_path() -> Path:
 
 
 def ensure_private_dir(path: Path) -> None:
+    existed = path.exists()
     path.mkdir(parents=True, exist_ok=True)
-    if os.name == "posix":
+    if os.name == "posix" and not existed:
         mode = path.stat().st_mode & 0o777
         if mode != 0o700:
             os.chmod(path, 0o700)

@@ -5,7 +5,7 @@ private and untrusted.
 
 ## Data Boundary
 
-- V0 is local-only.
+- Threadlens is local-only at runtime.
 - Threadlens does not upload sessions.
 - The SQLite index is a local cache and can be deleted or rebuilt.
 - Custom source profiles and the default index are stored under user config/data

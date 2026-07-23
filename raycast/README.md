@@ -6,16 +6,19 @@ This extension is a thin UI over the [Threadlens](https://github.com/moinulmoin/
 
 ## Requirements
 
-Install the Threadlens CLI (no Python required):
+Install the Threadlens CLI:
 
 ```bash
-npm install -g threadlens
-# or with uv:
-uvx threadlens             # run once
-uv tool install threadlens # global install
+uv tool install threadlens # recommended; installs a managed Python if needed
+# or:
+pipx install threadlens
 ```
 
 The extension looks for `threadlens` on your `PATH` (including `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin`). If it's installed elsewhere, set the full path in the **Threadlens Command** preference.
+
+If you previously installed the discontinued npm build, confirm that
+`command -v threadlens` resolves to the `uv`/`pipx` installation rather than the
+old npm shim.
 
 ## Usage
 

@@ -2,253 +2,224 @@
 
 ![Threadlens logo](assets/threadlens-logo.svg)
 
-[![npm version](https://img.shields.io/npm/v/threadlens?logo=npm&color=cb3837)](https://www.npmjs.com/package/threadlens)
 [![PyPI version](https://img.shields.io/pypi/v/threadlens?logo=pypi&logoColor=white&color=3775a9)](https://pypi.org/project/threadlens/)
 [![Python](https://img.shields.io/pypi/pyversions/threadlens?logo=python&logoColor=white)](https://pypi.org/project/threadlens/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/moinulmoin/threadlens)
 
-Built by [moinulmoin](https://moinulmoin.com) · [@moinulmoin](https://x.com/moinulmoin)
+**Find the coding-agent session you half-remember. Keep the history on your machine.**
 
-**Find the coding-agent session you half-remember — without uploading your session history.**
-
-Threadlens is a local-first search tool for coding-agent sessions. It refreshes
-local agent session stores into a private SQLite FTS cache so you can answer
-questions like:
-
-> Where did I debug the Plunk OTP issue?
-
-Your sessions never leave your machine. Raw agent session stores remain the
-source of truth; the Threadlens index is disposable and rebuildable.
-
-## Quickstart
+Threadlens searches local sessions from Codex, Claude Code, Cursor, Pi, OMP,
+Amp, Droid, OpenCode, and custom JSONL agents through one CLI. It turns rough
+memories such as `plunk otp`, `monorepo split`, or a typo into grouped session
+results with useful snippets and optional resume actions.
 
 ```bash
-uv tool install threadlens     # recommended (or: npm install -g threadlens)
-threadlens start               # discover local sources and build the index
-threadlens search "plunk otp"  # search every local agent session at once
+uv tool install threadlens
+threadlens start
+threadlens search "plunk otp"
 ```
 
-Searches your local **Codex, Claude Code, Cursor, Pi, OMP, Amp, Droid, and
-OpenCode** sessions — plus any custom JSONL agent you add with config, not code.
+Threadlens does not upload sessions. It reads the original local stores into a
+private, disposable SQLite FTS index that you can refresh or rebuild at any time.
 
-## Status
+## Why Threadlens
 
-v1.0 is focused on reliable local keyword, prefix, and typo-tolerant search.
-There are no embeddings, hosted sync, background daemon, or team features.
+- **Search across agents.** One query covers supported local session stores.
+- **Search the way you remember.** Exact, prefix, partial, and bounded
+  typo-tolerant matching help when the wording is fuzzy.
+- **Return sessions, not message spam.** Matches are grouped with titles,
+  working directories, timestamps, and the best snippets.
+- **Stay local.** No hosted sync, account, embeddings API, or background daemon.
+- **Use it anywhere.** Search from the terminal, Raycast, scripts, or a bundled
+  agent `SKILL.md`.
 
-## Platform support
+## Supported sources
 
-Threadlens runs anywhere Python 3.10+ runs — macOS, Linux, and Windows. What
-differs is *source discovery* (where it looks for each agent's local sessions):
+| Source | Local store | Notes |
+| --- | --- | --- |
+| Codex | JSONL sessions | Search and verified resume command |
+| Claude Code | JSONL sessions and history | Search and verified resume command |
+| Cursor | Local SQLite state | Best-effort because the private format can change |
+| Pi | JSONL sessions | Search and verified resume command |
+| OMP | JSONL sessions | Search and verified resume command |
+| Amp | Local prompt history | Prompts only; the observed store has no assistant history or resumable IDs |
+| Droid | JSONL sessions | Search and verified resume command |
+| OpenCode | Local SQLite database | Available when the database contains sessions |
+| Custom agents | Configured JSONL files | Add a profile without changing Threadlens code |
 
-- **macOS** — fully supported and tested.
-- **Linux** — supported, including Cursor (`$XDG_CONFIG_HOME` / `~/.config/Cursor`)
-  and Amp/OpenCode (`$XDG_DATA_HOME` / `~/.local/share`).
-- **Windows** — best-effort and **not yet tested on a real Windows machine**.
-  Cursor, Amp, and OpenCode are looked up under `%APPDATA%` / `%LOCALAPPDATA%`, but
-  the exact store locations are unverified. If a source isn't found, please report
-  the real path in [#1](https://github.com/moinulmoin/threadlens/issues/1).
-
-## Project Docs
-
-- [Architecture](ARCHITECTURE.md): source adapters, SQLite cache, ranking, and
-  Raycast boundary.
-- [Contributing](CONTRIBUTING.md): local development, tests, and adapter rules.
-- [Security](SECURITY.md): local data boundary and session safety.
-- [Evaluation](eval/README.md): public smoke tests and private acceptance evals.
+Raw stores remain the source of truth. Threadlens never writes to them.
 
 ## Install
 
-PyPI is the lean primary install; npm and the standalone binaries let you install
-without managing Python yourself.
+Threadlens is a Python CLI distributed through PyPI. It does not ship native
+executables or platform-specific binary downloads.
 
-### uv / pipx (recommended)
+> [!NOTE]
+> The old npm and standalone builds stop at 1.2.2 and will not receive updates.
+> Install Threadlens 1.3.0 or newer with `uv` or `pipx`. If
+> `command -v threadlens` still points to an npm shim, remove that old global
+> package to avoid a `PATH` conflict.
 
-`uv` can fetch a compatible Python for you, so this is the most reliable path:
+### uv (recommended)
 
-```bash
-uv tool install threadlens     # global install, on your PATH
-uvx threadlens search "..."    # run once, without installing
-```
-
-`pipx install threadlens` works the same way.
-
-### npm (no Python required)
-
-The npm package selects a prebuilt native binary for your platform via npm's
-`optionalDependencies` — the same way esbuild ships its binary — so it needs **no
-Python**:
+[`uv`](https://docs.astral.sh/uv/) can install Threadlens and manage a compatible
+Python automatically:
 
 ```bash
-npm install -g threadlens
-npx threadlens search "..."
-```
-
-Prebuilt targets: macOS Apple Silicon (arm64) and Linux x64 (glibc). On other
-platforms the shim points you back to the `uv` / `uvx` install above.
-
-### Standalone binary
-
-Every release attaches per-platform archives plus `SHA256SUMS` to the
-[GitHub releases](https://github.com/moinulmoin/threadlens/releases). For example,
-on Apple Silicon:
-
-```bash
-curl -fsSL -o threadlens.tar.gz \
-  https://github.com/moinulmoin/threadlens/releases/latest/download/threadlens-darwin-arm64.tar.gz
-tar -xzf threadlens.tar.gz            # -> ./threadlens/ (keep the folder together)
-./threadlens/threadlens --version
-# optional: symlink onto PATH (keep the extracted folder in place)
-sudo ln -sf "$PWD/threadlens/threadlens" /usr/local/bin/threadlens
-```
-
-Archives are `threadlens-darwin-arm64` and `threadlens-linux-x64-gnu`.
-Verify with `shasum -a 256 -c SHA256SUMS`.
-
-### Raycast
-
-Install the **Threadlens** extension from the Raycast store. The extension
-requires the `threadlens` CLI on your `PATH` — install it first:
-
-```bash
-npm install -g threadlens
-# or with uv:
 uv tool install threadlens
 ```
 
-If the CLI is installed elsewhere, set the full path in the **Threadlens
-Command** preference inside Raycast.
+Run it once without installing:
+
+```bash
+uvx threadlens search "plunk otp"
+```
+
+### pipx or pip
+
+```bash
+pipx install threadlens
+# or
+pip install threadlens
+```
+
+Threadlens requires Python 3.10 or newer.
 
 ### From source
 
 ```bash
-uv tool install .                 # or: uv tool install --reinstall .  after changes
-make verify                       # run the project checks
+git clone https://github.com/moinulmoin/threadlens.git
+cd threadlens
+uv tool install .
+make verify
 ```
 
-## Updating
+After changing the checkout, reinstall with `uv tool install --reinstall .`.
 
-Update Threadlens with the same channel you installed from:
+## Core workflow
 
-```bash
-uv tool upgrade threadlens          # uv
-pipx upgrade threadlens             # pipx
-npm install -g threadlens@latest    # npm
-pip install -U threadlens           # pip
-```
-
-For one-off `uvx` / `npx` runs, pin the version so you skip a cached build:
-`uvx threadlens@latest ...` or `npx threadlens@latest ...`. For the standalone
-binary, re-download the latest archive from the
-[releases page](https://github.com/moinulmoin/threadlens/releases/latest). The
-Raycast extension auto-updates through the store.
-
-Your index survives updates. Releases that add new tables do so additively
-(`create table if not exists`) the first time the new version opens your cache,
-so existing search data is preserved with no re-index and no manual migration.
-Run `threadlens refresh --reset` if you ever want a clean rebuild.
-
-## Initial Scope
-
-- In scope: local-only search, Codex JSONL, Claude Code JSONL, Cursor local SQLite records, Pi JSONL, Oh My Pi/OMP JSONL, Amp Code prompt history, Droid JSONL, OpenCode SQLite, custom JSONL source profiles.
-- Experimental: Cursor extraction quality depends on Cursor's local storage shape. Amp Code is supported from local prompt history when `~/.local/share/amp/history.jsonl` exists. OpenCode is supported when its local database contains sessions.
-- Out of scope for v0: hosted sync, full app UI, embeddings, background daemon, team sharing.
-
-Cursor's storage format is less stable than the JSONL-backed agents. The adapter
-is available in the default setup path, but should be treated as best-effort
-until validated against more real Cursor stores.
-
-## Usage
-
-Set up the local cache:
+### 1. Build the local index
 
 ```bash
 threadlens start
 ```
 
-`start` discovers built-in sources, explains the local-only SQLite index, indexes
-Codex, Claude, Cursor, Pi, OMP, Amp Code, Droid, and OpenCode when local
-sessions or prompt history exist, then prints commands to try next.
+`start` discovers supported stores, creates the local index, and prints useful
+next commands. Running `search` against an empty index performs the same initial
+setup unless `--no-bootstrap` is passed.
 
-Search works as the main entrypoint too. If the index is empty, it runs first-time
-indexing before searching:
+### 2. Search what you remember
 
 ```bash
 threadlens search "plunk otp"
+threadlens search "monorepo api split" --source codex
+threadlens search "rider modal" --cwd /path/to/project --limit 20
 ```
 
-Wrappers that need fast, side-effect-free search can disable first-time indexing:
+Use JSON Lines for integrations:
 
 ```bash
 threadlens search "plunk otp" --json --no-bootstrap
 ```
 
-Refresh the local cache manually:
+Each JSON result includes a stable result ID, source, session ID, title, working
+directory, timestamp, score, matched terms, snippets, source location, freshness
+metadata, and supported actions.
+
+### 3. Refresh when sessions change
 
 ```bash
 threadlens refresh
-```
-
-Fast first pass over recent work only:
-
-```bash
 threadlens refresh --days 14
-```
-
-After the first run, unchanged files are skipped automatically. Use `--force` to
-reindex matching files anyway.
-
-Search it:
-
-```bash
-threadlens search "plunk otp"
-threadlens search "monorepo api split" --source codex --limit 20
-threadlens search "plunk otp" --cwd /path/to/project
-threadlens search "plunk otp" --json
 threadlens search "plunk otp" --fresh
 ```
 
-Search shows how long ago the index was last checked and nudges you to `threadlens refresh` when it is over a day old; `--fresh` refreshes the relevant sources first.
-
-Inspect available sources:
-
-```bash
-threadlens sources
-```
-
-Current built-in source names:
-
-- `codex`
-- `claude`
-- `cursor`
-- `pi`
-- `omp`
-- `amp`
-- `droid`
-- `opencode`
-
-Reset and rebuild:
+Refresh tracks file modification time and size, so unchanged files are skipped.
+Use `--force` to reprocess matching files or `--reset` for a clean rebuild:
 
 ```bash
+threadlens refresh --force
 threadlens refresh --reset
 ```
 
-Use another database path (`--db` and `--config` are global flags that must
-appear before the subcommand):
+### 4. Inspect and continue a result
 
 ```bash
-threadlens --db /tmp/threadlens.sqlite refresh
-threadlens --db /tmp/threadlens.sqlite search "cursor composer"
+threadlens brief codex:019...
+threadlens resume codex:019...
 ```
 
-Add custom JSONL roots:
+`resume` prints a command; it never executes it. Resume actions are emitted only
+for agents whose local command syntax has been verified.
+
+## Useful commands
 
 ```bash
-threadlens refresh --include ~/.omp/local/research
+threadlens sources                         # show detected stores
+threadlens doctor                          # check adapters and index readiness
+threadlens stats                           # show indexed message/session counts
+threadlens search "query" --source claude  # filter by source
+threadlens search "query" --cwd "$PWD"     # filter by project tree
 ```
 
-Add a named custom agent source:
+Global options must appear before the subcommand:
+
+```bash
+threadlens --db /tmp/threadlens/index.sqlite refresh
+threadlens --db /tmp/threadlens/index.sqlite search "cursor composer"
+threadlens --config /tmp/threadlens/sources.json sources
+```
+
+By default, the index lives in the platform's user data directory and custom
+source profiles live in its user configuration directory.
+
+## Raycast
+
+The [`raycast/`](raycast/) directory contains a thin Raycast extension over
+`threadlens search --json`. It renders results and actions but does not index,
+parse, or rank sessions itself.
+
+Install the CLI first:
+
+```bash
+uv tool install threadlens
+```
+
+The extension finds common CLI locations such as `~/.local/bin`,
+`/opt/homebrew/bin`, and `/usr/local/bin`. If needed, set **Threadlens Command**
+to the full output of `command -v threadlens`.
+
+For local extension development:
+
+```bash
+cd raycast
+npm install
+npm run dev
+```
+
+Then run **Search Agent Sessions** in Raycast. You can also use Raycast's
+**Import Extension** command and select the repository's `raycast/` directory.
+
+## Bundled agent skill
+
+The Python package includes a `SKILL.md` that teaches compatible coding agents
+when and how to retrieve prior local sessions with Threadlens.
+
+Print its durable installed path:
+
+```bash
+threadlens skill
+threadlens skill --json
+```
+
+Copy or symlink the reported `threadlens` directory into the host agent's skills
+directory. The skill uses the installed CLI; it does not download or execute a
+standalone binary. The Raycast extension remains independent of the skill.
+
+## Custom JSONL agents
+
+Add a named source profile when another agent stores sessions as JSONL:
 
 ```bash
 threadlens sources add aider \
@@ -261,163 +232,98 @@ threadlens sources add aider \
   --cwd-key cwd \
   --title-key title \
   --resume-template "cd {cwd} && aider --resume {session_id}"
-```
 
-Then refresh and search it:
-
-```bash
 threadlens refresh --source aider
 threadlens search "custom agent bug" --source aider
 ```
 
-Source profiles are stored in the user config directory by default. Built-in
-source names are reserved, and custom source names become first-class result
-prefixes such as `aider:session-id`.
+Built-in names are reserved. Custom names become result prefixes such as
+`aider:session-id`. Resume templates support `{cwd}`, `{session_id}`, and
+`{source}`; Threadlens shell-quotes the substituted values.
 
-Inspect source health:
-
-```bash
-threadlens doctor
-```
-
-`doctor` reports source readability separately from index readiness. If local
-sessions are found but the SQLite index has no searchable messages, it reports
-`not_ready` and points to `threadlens start`.
-
-Print a compact session brief:
+For an unnamed one-off JSONL root:
 
 ```bash
-threadlens brief codex:019...
+threadlens refresh --include ~/.local/share/my-agent/sessions
 ```
 
-Print a verified resume command when the source supports one:
+## Privacy and safety
+
+- Session data and the search index stay on the local machine.
+- Source stores are read-only inputs; the SQLite index is disposable.
+- User and assistant messages are indexed where the source format identifies
+  roles. System/developer instructions, thinking blocks, and tool output are
+  skipped by supported adapters where those fields are distinguishable.
+- Generic and Cursor extraction skip obvious credential fields.
+- Display-time redaction masks common token and credential shapes.
+- Session content is treated as untrusted data. Threadlens does not execute it
+  or follow instructions found inside it.
+- Index and profile files use private filesystem permissions where supported.
+  Threadlens creates its own storage directories privately and never changes the
+  permissions of a parent directory that already exists.
+
+See [SECURITY.md](SECURITY.md) for the full data boundary and reporting guidance.
+
+## Platform support
+
+Threadlens runs wherever Python 3.10+ runs. Source discovery depends on where
+each agent stores its local data:
+
+- **macOS:** fully supported and tested.
+- **Linux:** supported, including XDG locations for Cursor, Amp, and OpenCode.
+- **Windows:** implemented as best-effort but not yet validated on a physical
+  Windows machine. Cursor, Amp, and OpenCode discovery checks `%APPDATA%` and
+  `%LOCALAPPDATA%`. Please report confirmed paths in
+  [issue #1](https://github.com/moinulmoin/threadlens/issues/1).
+
+## Updating
+
+Use the same tool you installed with:
 
 ```bash
-threadlens resume codex:019...
+uv tool upgrade threadlens
+pipx upgrade threadlens
+pip install --upgrade threadlens
 ```
 
-## Bundled Codex Skill
+The index survives normal upgrades. Run `threadlens refresh --reset` only when
+you want to rebuild it from scratch.
 
-Threadlens ships a small Codex skill with the Python package. It teaches an
-agent when and how to use the CLI for local session retrieval without turning
-Threadlens into a memory product.
+## Evaluation and benchmarks
 
-After installing the CLI, print the bundled skill path:
+Threadlens includes deterministic retrieval evaluation and latency gates:
 
 ```bash
-threadlens skill
-threadlens skill --json
+threadlens --db .threadlens/index.sqlite \
+  eval .threadlens/eval-local-10.json --timings
+
+threadlens --db .threadlens/index.sqlite \
+  bench .threadlens/eval-local-10.json --max-p95-ms 250
 ```
 
-Copy or symlink that `threadlens` skill folder into the agent's local skills
-directory when the host supports filesystem skills. The Raycast extension does
-not package the skill; it stays a thin UI over the CLI.
+Private eval files should map remembered queries to known local sessions. The
+project acceptance target is Recall@5 >= 90%, no unrelated target sessions in
+the top five, and p95 search latency below 250 ms on the current local corpus.
 
-Run query-to-session evaluation:
+Public custom-source fixtures live under [`eval/`](eval/). Run the complete
+project verification suite with:
 
 ```bash
-threadlens eval .threadlens/eval-local-10.json
-threadlens eval .threadlens/eval-local-10.json --timings
-threadlens bench .threadlens/eval-local-10.json --max-p95-ms 250
+make verify
 ```
 
-For a real acceptance gate, create a private eval file with known local session
-ids and remembered queries. The target is Recall@5 >= 90% with no unrelated
-target sessions in the top 5.
+## Project boundaries
 
-If you are using the repo-local development index, include `--db`:
+Search is the product. Indexing is local plumbing, and resume/open commands are
+optional result actions. Threadlens intentionally has no hosted sync, account
+system, team sharing, semantic embeddings, or background daemon.
 
-```bash
-threadlens --db .threadlens/index.sqlite eval .threadlens/eval-local-10.json --timings
-threadlens --db .threadlens/index.sqlite bench .threadlens/eval-local-10.json --max-p95-ms 250
-```
+## Documentation
 
-The committed custom-source fixture can be used for a public development smoke
-eval without private sessions:
+- [Architecture](ARCHITECTURE.md) — adapters, index, ranking, and UI boundary
+- [Contributing](CONTRIBUTING.md) — development workflow and adapter rules
+- [Security](SECURITY.md) — privacy model and untrusted-session handling
+- [Evaluation](eval/README.md) — eval formats and acceptance testing
 
-```bash
-mkdir -p /private/tmp/threadlens-smoke
-threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json sources add demoagent \
-  --path eval/custom-source.example.jsonl \
-  --session-key session.id \
-  --message-key message.id \
-  --role-key message.role \
-  --text-key message.content \
-  --timestamp-key createdAt \
-  --cwd-key cwd \
-  --title-key title
-threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json refresh --source demoagent --force
-threadlens --db /private/tmp/threadlens-smoke/index.sqlite --config /private/tmp/threadlens-smoke/sources.json eval eval/custom-source.eval.json
-```
-
-## Notes
-
-- The cache defaults to a user data directory. Pass `--db` for repo-local or temporary databases.
-- Custom source profiles default to a user config directory. Pass `--config` for repo-local or temporary profiles.
-- Refresh tracks file `mtime` and size, so repeat runs skip unchanged session files.
-- Only user and assistant messages are indexed for Codex and Claude by default.
-- Tool output and system/developer instructions are skipped for Codex and Claude.
-- Pi, OMP, Droid, and OpenCode adapters index user/assistant text parts and skip thinking/tool blocks.
-- Amp Code indexes local prompt history from `~/.local/share/amp/history.jsonl`; the observed local store does not include assistant sessions, timestamps, or resumable session ids.
-- Obvious credential fields are skipped in generic and Cursor extraction.
-- Search results are grouped by session and include source, timestamp, cwd, source path, line, snippets, and score.
-- Use `--cwd` to restrict search to sessions whose recorded cwd is that directory or a child directory.
-- For harnesses with verified local resume syntax, results include a copyable resume command.
-- Custom source resume templates support `{cwd}`, `{session_id}`, and `{source}` with shell-quoted values.
-
-Current resume hints:
-
-- Codex: `cd <cwd> && codex resume <session_id>`
-- Claude Code: `cd <cwd> && claude --resume <session_id>`
-- Pi: `cd <cwd> && pi --session <session_id>`
-- OMP: `cd <cwd> && omp --resume <session_id>`
-- Droid: `cd <cwd> && droid --resume <session_id>`
-- OpenCode: `cd <cwd> && opencode --session <session_id>`
-- Amp Code: not emitted yet; the observed local history file does not expose resumable session ids
-- Cursor: not emitted yet; the local CLI did not expose a session resume command
-
-## Raycast
-
-The `raycast/` folder contains a thin Raycast extension. It calls the CLI JSON
-interface and does not implement its own parsing, indexing, or ranking.
-
-With the CLI installed, configure extension preferences as:
-
-- Threadlens Command: `threadlens`
-- Threadlens Args: empty
-- Working Directory: empty
-
-Run in development mode:
-
-```bash
-cd raycast
-npm install
-npm run dev
-```
-
-Then open Raycast and run `Search Agent Sessions`.
-
-To install it from source instead of only running the dev process, use Raycast's
-`Import Extension` command and select:
-
-```text
-<repo>/raycast
-```
-
-If Raycast asks which command to import, choose `threadlens`.
-
-From the repo root, the same TypeScript check is:
-
-```bash
-npm --prefix raycast exec -- tsc --project raycast/tsconfig.json --noEmit
-NPM_CONFIG_CACHE=/private/tmp/threadlens-npm-cache npm --prefix raycast run lint
-```
-
-If Raycast shows `Missing executable`, remove the old imported extension from
-Raycast, quit and reopen Raycast, then run `npm run dev` again from `raycast/`.
-That error usually means Raycast is loading a stale imported command bundle.
-
-If Raycast shows `spawn threadlens ENOENT`, set the `Threadlens Command`
-preference to the full path from `command -v threadlens`. The extension already
-adds common CLI install paths such as `~/.local/bin`, `/opt/homebrew/bin`, and
-`/usr/local/bin` before spawning the CLI.
+Built by [moinulmoin](https://moinulmoin.com) ·
+[@moinulmoin](https://x.com/moinulmoin) · MIT licensed

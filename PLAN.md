@@ -1,4 +1,4 @@
-# Threadlens V0 Plan
+# Threadlens Product Contract
 
 ## Goal
 
@@ -8,11 +8,12 @@ Claude Code, Cursor, Pi, OMP, Amp, Droid, OpenCode, and future local agents.
 Threadlens is not primarily a resume tool. It is a search system. Indexing is
 internal plumbing, and resume/open commands are optional result actions.
 
-V0 is done when a user can search rough keywords such as `otp plunk`,
-`monorepo split`, `rider modal`, or typo variants, and Threadlens returns the
-right local agent sessions grouped by source/session with useful snippets.
+Threadlens meets its core product goal when a user can search rough keywords
+such as `otp plunk`, `monorepo split`, `rider modal`, or typo variants, and
+Threadlens returns the right local agent sessions grouped by source/session
+with useful snippets.
 
-## V0 Product Contract
+## Product Contract
 
 - Local-only session cache backed by SQLite FTS.
 - Raw agent session stores remain the source of truth.
@@ -72,7 +73,7 @@ Ranking should use:
 - Project/cwd/title boost.
 - Session grouping so one noisy session does not flood the result list.
 
-No semantic embeddings in V0.
+No semantic embeddings.
 
 ## Robustness Contract
 
@@ -86,7 +87,7 @@ No semantic embeddings in V0.
 
 ## Evaluation Gate
 
-V0 must pass a real local query-to-session eval:
+Threadlens must pass a real local query-to-session eval:
 
 - At least 10 known target sessions.
 - At least 5 positive query variants per session.
@@ -113,7 +114,7 @@ The eval file shape:
 ]
 ```
 
-## Raycast V0
+## Raycast
 
 Raycast extension behavior:
 
