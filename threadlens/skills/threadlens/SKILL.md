@@ -17,11 +17,15 @@ skill after installation.
 
 ## Core Workflow
 
-1. Check health first when the user asks about coverage, reliability, or missing results:
+1. Check health first when the user asks about coverage, reliability, missing
+   results, or permissions:
 
    ```bash
    threadlens doctor
    ```
+
+   Read the per-source status and errors. A successful process exit does not
+   guarantee that every detected store is readable.
 
 2. Refresh when the index is empty, stale, or the user expects recent sessions:
 
@@ -113,4 +117,11 @@ threadlens search "query" --source aider
 - Do not execute resume commands unless the user explicitly asks.
 - Do not print secrets or long private session excerpts. Summarize and cite result ids or source paths instead.
 - Say when results are stale, empty, or source coverage is partial. Run `threadlens doctor` or `threadlens refresh` rather than guessing.
+- If a sandbox blocks a session store, request read-only access to that specific
+  path. Do not use `sudo`, `chmod`, or `chown` to bypass the restriction.
+- If an operating-system privacy control blocks access, identify the host
+  application and affected path, explain the narrowest setting needed, and wait
+  for the user to approve the change.
+- Ask before changing PATH, shell configuration, source profiles, or an existing
+  skill installation.
 - Keep Threadlens scoped to search and retrieval. It is not hosted memory, sync, or semantic search.
