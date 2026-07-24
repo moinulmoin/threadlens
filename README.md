@@ -486,6 +486,7 @@ system, team sharing, embeddings API, or background daemon.
 
 ## Project documentation
 
+- [DeepWiki](https://deepwiki.com/moinulmoin/threadlens) — generated codebase map, architecture, and repository Q&A
 - [Architecture](ARCHITECTURE.md) — adapters, index, ranking, and UI boundary
 - [Contributing](CONTRIBUTING.md) — development workflow and adapter rules
 - [Security](SECURITY.md) — privacy model and untrusted-session handling
