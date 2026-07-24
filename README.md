@@ -51,132 +51,51 @@ search interface.
 
 ## Set up Threadlens with your agent
 
-Paste the prompt below into Codex, Claude Code, Cursor, or another coding agent
-that can use a terminal. It gives the agent enough authority to complete normal
-setup while keeping destructive and privacy-sensitive decisions with you.
+Give your agent this README, or paste this short handoff:
 
 ```text
-Set up Threadlens, a local-first search CLI for my coding-agent sessions.
+Read https://github.com/moinulmoin/threadlens#readme and set up Threadlens for me.
 
-Goal:
-- Install or upgrade the official Python CLI from PyPI.
-- Make its bundled Threadlens skill available to this agent when the host has a
-  supported local skills directory.
-- Detect my local agent stores, build the index, and verify that search is ready.
-
-You may:
-- Inspect my OS, PATH, Python, uv, pipx, and existing Threadlens installation.
-- Install or upgrade Threadlens in my user environment with uv or pipx.
-- Run Threadlens sources, doctor, start, refresh, stats, skill, and a harmless
-  verification search.
-- Request read-only access to the specific local session paths Threadlens needs
-  if your sandbox blocks them.
-- Copy or symlink the bundled Threadlens skill into this agent host's local
-  skills directory if you can identify that directory safely. Do not overwrite
-  an existing skill without asking me.
-
-Do not:
-- Download a native executable or install the discontinued npm package.
-- Use sudo, chmod, or chown to bypass a permission problem.
-- Expose session text, credentials, tokens, or private paths in public output.
-- Execute a resume command; `threadlens resume` should only print it.
-
-Ask me before:
-- Uninstalling an old package.
-- Editing PATH, shell startup files, or agent configuration.
-- Changing macOS/Windows privacy settings or other OS-level permissions.
-- Adding a custom source profile.
-
-Procedure:
-1. Check the platform and run the appropriate PATH lookup: use
-   `command -v threadlens` on macOS/Linux or `Get-Command threadlens` in
-   PowerShell. Then check `threadlens --version` if present.
-2. If an old npm/standalone installation is taking precedence, explain the
-   conflict and ask before removing it or changing PATH.
-3. Install with `uv tool install threadlens` or upgrade with
-   `uv tool upgrade threadlens`. If uv is unavailable, use
-   `pipx install threadlens` / `pipx upgrade threadlens`. If neither tool exists,
-   explain the smallest safe prerequisite and ask before installing it.
-4. Run `threadlens sources` and `threadlens doctor --json`. Inspect the per-source
-   errors and index status; do not assume exit code 0 means every source is
-   readable.
-5. If access is blocked, request only the read access you need. If the operating
-   system itself blocks a path, tell me which host application and path need
-   access, then wait for me to change the setting.
-6. Run `threadlens start`, followed by `threadlens doctor --json` and
-   `threadlens stats`.
-7. Run `threadlens skill --json`. If this agent host supports local skills,
-   install that reported directory using the host's documented convention and
-   report exactly what you changed.
-8. Verify with a narrow, non-sensitive search such as
-   `threadlens search "setup" --limit 3`. Summarize results without printing long
-   session excerpts.
-
-Finish by reporting:
-- Installed version and resolved command path.
-- Sources detected, sources indexed, and any partial coverage.
-- Index readiness and the command I should use for my first real search.
-- Whether the skill was installed, and its destination.
-- Anything that still requires my approval or an OS settings change.
+- Install or upgrade the PyPI CLI with uv or pipx. Do not use npm, a native
+  binary, sudo, chmod, or chown.
+- Run `threadlens start`, `threadlens doctor --json`, and `threadlens stats`.
+- Run `threadlens skill --json` and install the reported skill for this agent if
+  the host supports local skills.
+- If access is blocked, request read-only access to the specific session path.
+- Ask before uninstalling anything, changing PATH or OS permissions, or
+  overwriting an existing skill.
+- Verify a search, then report the version, command path, indexed sources, skill
+  location, and anything I still need to approve.
 ```
 
-The agent should stop and ask when its own sandbox or your operating system
-requires approval. That is expected; Threadlens does not need broad filesystem
-permissions to work.
+That is enough for setup. The bundled skill teaches the agent how to search,
+refresh, inspect, and safely use results afterward.
 
 ## Set up Threadlens yourself
 
-### 1. Install the CLI
-
-[`uv`](https://docs.astral.sh/uv/) is recommended because it installs the CLI in
-an isolated environment and can manage a compatible Python version for it:
+Install with [`uv`](https://docs.astral.sh/uv/) or `pipx`:
 
 ```bash
 uv tool install threadlens
-```
-
-Or use `pipx`:
-
-```bash
+# or
 pipx install threadlens
 ```
 
-Threadlens requires Python 3.10 or newer. To try one command without keeping an
-installation:
-
-```bash
-uvx threadlens search "plunk otp"
-```
-
-### 2. Discover and index your sessions
+Build the local index and run your first search:
 
 ```bash
 threadlens start
-```
-
-`start` discovers readable supported stores, creates the private local index,
-and reports whether setup is ready or partial. It is safe to run again when you
-want to repair setup.
-
-### 3. Search what you remember
-
-```bash
 threadlens search "plunk otp"
-threadlens search "monorepo api split" --source codex
-threadlens search "rider modal" --cwd /path/to/project --limit 20
 ```
 
-### 4. Inspect or continue a result
-
-Copy the result ID shown by search:
+If setup reports partial coverage, run:
 
 ```bash
-threadlens brief codex:019...
-threadlens resume codex:019...
+threadlens doctor
 ```
 
-`brief` shows compact session context. `resume` only prints a verified command;
-it never executes that command for you.
+Threadlens requires Python 3.10 or newer. To try it without installing, use
+`uvx threadlens search "plunk otp"`.
 
 ## Everyday commands
 
