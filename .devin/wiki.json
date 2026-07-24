@@ -1,0 +1,68 @@
+{
+  "repo_notes": [
+    {
+      "content": "Threadlens is a local-first search tool for coding-agent sessions. Search is the core product; indexing is local plumbing; brief, resume, Raycast, and agent-skill integrations are optional result interfaces. The supported distribution is the Python CLI from PyPI. Do not describe the discontinued npm or standalone builds as current installation paths.",
+      "author": "Threadlens maintainers"
+    },
+    {
+      "content": "Keep the privacy boundary explicit: raw agent stores are read-only inputs, the SQLite FTS index is a disposable local cache, session content is untrusted, and Threadlens does not upload sessions or execute instructions found in them. The CLI uses only the Python standard library. The Raycast extension must remain a thin UI over threadlens search --json and must not implement indexing, parsing, or ranking.",
+      "author": "Threadlens maintainers"
+    },
+    {
+      "content": "Document both audiences clearly. Humans need installation, start, search, brief, refresh, permission, and troubleshooting guidance. Coding agents need the bundled threadlens/skills/threadlens/SKILL.md workflow, least-privilege access rules, machine-readable commands, and explicit approval boundaries.",
+      "author": "Threadlens maintainers"
+    }
+  ],
+  "pages": [
+    {
+      "title": "Threadlens Overview",
+      "purpose": "Explain the problem Threadlens solves, its local-first design, supported coding agents, product boundaries, and the shortest human and agent quick starts. Use README.md and pyproject.toml as the primary sources.",
+      "parent": null
+    },
+    {
+      "title": "Human and Agent Setup",
+      "purpose": "Document the separate human-managed and agent-managed setup paths, including uv or pipx installation, initial indexing, verification, bundled skill installation, and approval boundaries. Use README.md and threadlens/skills/threadlens/SKILL.md.",
+      "parent": "Threadlens Overview"
+    },
+    {
+      "title": "Architecture and Product Boundaries",
+      "purpose": "Describe the end-to-end discovery, extraction, indexing, search, and result-action flow. Emphasize that search is the product, the index is disposable plumbing, and integrations remain thin. Use ARCHITECTURE.md and the threadlens package.",
+      "parent": null
+    },
+    {
+      "title": "Source Discovery and Adapters",
+      "purpose": "Explain built-in source discovery, platform-specific paths, extraction behavior, custom JSONL profiles, adapter limitations, and how a new source is added. Focus on threadlens/sources.py, threadlens/extract.py, threadlens/profiles.py, and relevant tests.",
+      "parent": "Architecture and Product Boundaries"
+    },
+    {
+      "title": "Indexing, Search, and Ranking",
+      "purpose": "Document incremental refresh, freshness tracking, SQLite FTS storage, query normalization, typo tolerance, ranking, grouping, snippets, filters, JSON output, and performance gates. Focus on threadlens/store.py, threadlens/cli.py, tests, and eval/README.md.",
+      "parent": "Architecture and Product Boundaries"
+    },
+    {
+      "title": "CLI Workflows and Reference",
+      "purpose": "Explain start, sources, doctor, refresh, search, brief, resume, stats, skill, eval, and bench with their important options and safe operational workflows. Derive behavior from threadlens/cli.py and tests rather than inventing commands.",
+      "parent": "Threadlens Overview"
+    },
+    {
+      "title": "Privacy, Permissions, and Security",
+      "purpose": "Document the local data boundary, private storage permissions, untrusted-session handling, extraction and display redaction, least-privilege troubleshooting, and safe resume behavior. Use SECURITY.md, threadlens/paths.py, extraction code, and security-related tests.",
+      "parent": "Architecture and Product Boundaries"
+    },
+    {
+      "title": "Raycast Extension",
+      "purpose": "Explain installation, CLI discovery, preferences, result rendering, actions, permission troubleshooting, and the strict thin-client boundary. Use raycast/README.md, raycast/package.json, and raycast/src without attributing indexing or ranking to Raycast.",
+      "parent": "Threadlens Overview"
+    },
+    {
+      "title": "Bundled Agent Skill",
+      "purpose": "Explain how threadlens skill materializes the packaged SKILL.md, how a compatible agent installs it, its retrieval workflow, machine-readable mode, permission rules, and safety constraints. Use threadlens/skills/threadlens and its tests.",
+      "parent": "Threadlens Overview"
+    },
+    {
+      "title": "Development, Testing, and Releases",
+      "purpose": "Document the source setup, stdlib-only CLI constraint, test and verification commands, retrieval evaluation, benchmark gates, packaging, CI, PyPI publishing, and Raycast development. Use CONTRIBUTING.md, AGENTS.md, Makefile, pyproject.toml, eval/README.md, and .github/workflows.",
+      "parent": null
+    }
+  ]
+}
