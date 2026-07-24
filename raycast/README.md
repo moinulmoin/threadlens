@@ -12,6 +12,8 @@ Install the Threadlens CLI:
 uv tool install threadlens # recommended; installs a managed Python if needed
 # or:
 pipx install threadlens
+
+threadlens start
 ```
 
 The extension looks for `threadlens` on your `PATH` (including `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin`). If it's installed elsewhere, set the full path in the **Threadlens Command** preference.
@@ -19,6 +21,11 @@ The extension looks for `threadlens` on your `PATH` (including `~/.local/bin`, `
 If you previously installed the discontinued npm build, confirm that
 `command -v threadlens` resolves to the `uv`/`pipx` installation rather than the
 old npm shim.
+
+Prefer to let your coding agent handle installation, diagnostics, and the
+bundled skill? Copy the
+[agent setup prompt](https://github.com/moinulmoin/threadlens#set-up-threadlens-with-your-agent)
+from the main README.
 
 ## Usage
 
@@ -30,3 +37,13 @@ Under the hood it calls:
 threadlens search "<query>" --json
 threadlens brief "<result_id>" --json
 ```
+
+## Troubleshooting
+
+Run `threadlens doctor` in Terminal first. If the CLI works there but Raycast
+reports a permission error, Raycast itself needs access to the session location
+named in the error. Grant only that access where possible; Full Disk Access
+should be a last resort.
+
+If Raycast cannot find the command, set **Threadlens Command** to the absolute
+path returned by `command -v threadlens`.
